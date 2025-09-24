@@ -1,0 +1,59 @@
+name: zp_sangali_dashboard_flutter
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  flutter_localizations:
+    sdk: flutter
+
+  fl_chart: ^1.1.1
+  syncfusion_flutter_charts: ^31.1.19
+  flutter_svg: ^2.1.6
+  vector_math: ^2.1.2
+  provider: ^6.1.5+1
+  get_it: ^8.2.0
+  dio: ^5.9.0
+  logger: ^2.6.1
+  shared_preferences: ^2.5.3
+  flutter_secure_storage: ^9.2.4
+  flutter_dotenv: ^6.0.0
+  json_annotation: ^4.9.0
+  video_player: ^2.10.0
+  google_fonts: ^6.3.1
+  marquee: ^2.3.0
+  cupertino_icons: ^1.0.5
+  file_picker:
+  easy_localization:
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.1
+
+flutter:
+  uses-material-design: true
+  generate: true
+
+  assets:
+    - assets/videos/
+    - assets/images/
+    - assets/icons/
+    - assets/translations/mr.json  # 👈 फक्त folder path, files individually नको
+    - assets/translations/en.json
+
+
+#  fonts:
+#    - family: Poppins
+#      fonts:
+#        - asset: assets/fonts/Poppins-Regular.ttf
+#        - asset: assets/fonts/Poppins-Medium.ttf
+#        - asset: assets/fonts/Poppins-SemiBold.ttf
+#        - asset: assets/fonts/Poppins-Bold.ttf

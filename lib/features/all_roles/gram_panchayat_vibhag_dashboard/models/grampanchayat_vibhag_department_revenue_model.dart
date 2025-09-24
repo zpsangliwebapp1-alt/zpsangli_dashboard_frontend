@@ -1,0 +1,11 @@
+  class GramPanchayatVibhagDepartmentRevenue {
+    final String taluka;
+    final String department;
+    final double revenue;
+
+    GramPanchayatVibhagDepartmentRevenue({
+      required this.taluka,
+      required this.department,
+      required this.revenue,
+    });
+  }
