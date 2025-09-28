@@ -11,8 +11,8 @@ class AppFonts {
 }
 
 class AppSizes {
-  static const double sidebarWidth = 260;
-  static const double sidebarMinWidth = 72;
+  static const double sidebarWidth = 280;
+  static const double sidebarMinWidth = 82;
   static const double logoSize = 64;
   static const double iconSize = 22;
   static const double padding = 14;

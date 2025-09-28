@@ -48,6 +48,7 @@ flutter:
     - assets/icons/
     - assets/translations/mr.json  # 👈 फक्त folder path, files individually नको
     - assets/translations/en.json
+    - assets/data/department_data.json
 
 
 #  fonts:

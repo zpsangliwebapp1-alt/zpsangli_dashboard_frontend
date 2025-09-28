@@ -42,4 +42,10 @@ class AppTextStyles {
     color: Colors.blue,
     decoration: TextDecoration.underline,
   );
+
+  static const dropdownText = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w500,
+    color: Colors.white,
+  );
 }

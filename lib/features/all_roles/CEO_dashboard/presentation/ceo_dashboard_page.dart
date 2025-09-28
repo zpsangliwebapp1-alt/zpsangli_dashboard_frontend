@@ -11,24 +11,65 @@ import '../../BDO_dashboard/widgets/Bdo_dashboard_content.dart';
 import '../../ceo_dashboard/widgets/ceo_topbar.dart';
 
 /// Top-level dashboard scaffold (entry point)
-class CeoDashboardPage extends StatelessWidget {
+class CeoDashboardPage extends StatefulWidget {
   const CeoDashboardPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(builder: (context, constraints) {
-      final width = constraints.maxWidth;
+  State<CeoDashboardPage> createState() => _CeoDashboardPageState();
+}
 
-      if (width >= Breakpoints.desktop) {
-        return const CeoDashboardDesktopDashboard();
-      } else if (width >= Breakpoints.tablet) {
-        return const CeoDashboardTabletDashboard();
-      } else {
-        return const CeoDashboardMobileDashboard();
-      }
-    });
+class _CeoDashboardPageState extends State<CeoDashboardPage> {
+  int _selectedIndex = 0;
+
+  void _onItemSelected(int index) => setState(() => _selectedIndex = index);
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+
+    final double sidebarWidth = width < 600 ? 80 : (width < 1024 ? 100 : 260);
+
+    return Scaffold(
+      body: SafeArea(
+        child: Row(
+          children: [
+            SizedBox(
+              width: sidebarWidth,
+              child: CeoSidebar(
+                selectedIndex: _selectedIndex,
+                onItemSelected: _onItemSelected,
+              ),
+            ),
+            Expanded(
+              child: Column(
+                children: [
+                  const CeoTopBar(),
+                  Expanded(
+                    child: _getSelectedContent(),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _getSelectedContent() {
+    switch (_selectedIndex) {
+      case 0:
+        return CeoDashboardContent();
+      case 1:
+        return const Center(child: Text("Reports Screen"));
+      case 2:
+        return const Center(child: Text("Analytics Screen"));
+      default:
+        return const Center(child: Text("Coming Soon..."));
+    }
   }
 }
+
 
 /////////////// DESKTOP LAYOUT ///////////////
 class CeoDashboardDesktopDashboard extends StatefulWidget {
