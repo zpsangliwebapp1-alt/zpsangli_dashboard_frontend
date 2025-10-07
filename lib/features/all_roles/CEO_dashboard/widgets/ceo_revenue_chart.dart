@@ -1,4 +1,4 @@
-// lib/ui/widgets/ekatmik_balvikas_revenue_chart.dart
+// lib/ui/widgets/public_revenue_chart.dart
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 

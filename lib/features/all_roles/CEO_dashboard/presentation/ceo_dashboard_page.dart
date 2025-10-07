@@ -1,7 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:zp_sangali_dashboard_flutter/features/all_roles/CEO_dashboard/presentation/department_sidebar_screen.dart';
+import 'package:zp_sangali_dashboard_flutter/features/all_roles/CEO_dashboard/presentation/uploaded_file_list_screen.dart';
 import 'package:zp_sangali_dashboard_flutter/features/all_roles/CEO_dashboard/widgets/ceoSidebar.dart';
 import 'package:zp_sangali_dashboard_flutter/features/all_roles/CEO_dashboard/widgets/ceo_dashboard_content.dart';
+import 'package:zp_sangali_dashboard_flutter/features/all_roles/CEO_dashboard/widgets/excel_upload_button.dart';
 import '../../../../core/widgets/breakpoint.dart';
 import '../../../../core/widgets/dashboard_content.dart';
 import '../../../../core/widgets/sidebar.dart';
@@ -61,11 +64,11 @@ class _CeoDashboardPageState extends State<CeoDashboardPage> {
       case 0:
         return CeoDashboardContent();
       case 1:
-        return const Center(child: Text("Reports Screen"));
+        return  Container();
       case 2:
-        return const Center(child: Text("Analytics Screen"));
+        return const UploadedFileListScreen();
       default:
-        return const Center(child: Text("Coming Soon..."));
+        return Center(child: const ExcelUploadButton());
     }
   }
 }
@@ -122,7 +125,7 @@ class _CeoDashboardDesktopDashboardState extends State<CeoDashboardDesktopDashbo
       case 0:
         return  CeoDashboardContent(); // 👉 default dashboard
       case 1:
-        return const Center(child: Text("Reports Screen"));
+        return Container();
       case 2:
         return const Center(child: Text("Analytics Screen"));
       default:

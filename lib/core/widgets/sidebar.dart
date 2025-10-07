@@ -1,170 +1,271 @@
-// lib/ui/widgets/ekatmik_balvikas_yojna_sidebar.dart
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:zp_sangali_dashboard_flutter/core/widgets/responsive_texts.dart';
 
-class Sidebar extends StatelessWidget {
-  final bool minimal;
-  const Sidebar({super.key, this.minimal = false});
+import '../../features/all_roles/BDO_dashboard/widgets/responsive_layout.dart';
+class BdoSidebar extends StatelessWidget {
+  final String activeRoute;
+  final Function(String route)? onItemSelected;
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-      color: Colors.transparent,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Logo / App name
-          Row(
-            children: [
-              Container(
-                height: 44,
-                width: 44,
-                decoration: BoxDecoration(
-                  color: Colors.deepPurple,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Center(child: Icon(Icons.dashboard, color: Colors.white)),
-              ),
-              if (!minimal) ...[
-                const SizedBox(width: 12),
-                const Text(
-                  'Dabang',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-              ]
-            ],
-          ),
-          const SizedBox(height: 28),
-
-          // Navigation items
-          Expanded(
-            child: ListView(
-              children: [
-                SidebarItem(
-                  icon: Icons.pie_chart,
-                  label: 'Dashboard',
-                  active: true,
-                  minimal: minimal,
-                ),
-                SidebarItem(icon: Icons.leaderboard, label: 'Leaderboard', minimal: minimal),
-                SidebarItem(icon: Icons.shopping_cart, label: 'Order', minimal: minimal),
-                SidebarItem(icon: Icons.store, label: 'Products', minimal: minimal),
-                SidebarItem(icon: Icons.bar_chart, label: 'Sales Report', minimal: minimal),
-                SidebarItem(icon: Icons.message, label: 'Messages', minimal: minimal),
-                SidebarItem(icon: Icons.settings, label: 'Settings', minimal: minimal),
-                SidebarItem(icon: Icons.logout, label: 'Sign Out', minimal: minimal),
-              ],
-            ),
-          ),
-
-          // Dabang Pro card (only in full sidebar)
-          if (!minimal) ...[
-            const SizedBox(height: 12),
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 8),
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: Colors.deepPurple.shade400,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
-                    blurRadius: 8,
-                  )
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Dabang Pro',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Get access to all\nfeatures on tebuntas',
-                    style: TextStyle(color: Colors.white70, fontSize: 12),
-                  ),
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: Colors.deepPurple,
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: const Text('Get Pro'),
-                    ),
-                  ),
-                ],
-              ),
-            )
-          ]
-        ],
-      ),
-    );
-  }
-}
-
-class SidebarItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool active;
-  final bool minimal;
-
-  const SidebarItem({
+  const BdoSidebar({
     super.key,
-    required this.icon,
-    required this.label,
-    this.active = false,
-    this.minimal = false,
+    this.activeRoute = "dashboard",
+    this.onItemSelected,
   });
 
   @override
   Widget build(BuildContext context) {
-    final base = Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            size: 20,
-            color: active ? Colors.deepPurple : Colors.grey.shade700,
+    final bool isDesktop = ResponsiveLayout.isDesktop(context);
+    final bool isTablet = ResponsiveLayout.isTablet(context);
+    final bool isMobile = ResponsiveLayout.isMobile(context);
+
+    final double sidebarWidth = isDesktop
+        ? 250
+        : isTablet
+        ? 200
+        : 70;
+    final double iconSize = isDesktop
+        ? 26
+        : isTablet
+        ? 24
+        : 22;
+    final double fontSize = context.scaleText(18); // uses your extension
+    final double headerFontSize = context.scaleText(16);
+
+    return Container(
+      width: sidebarWidth,
+      padding: EdgeInsets.symmetric(
+        vertical: isMobile ? 16 : 20,
+        horizontal: isMobile ? 8 : 16,
+      ),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF0D47A1), Color(0xFF1976D2)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.12),
+            blurRadius: 12,
+            offset: const Offset(2, 0),
           ),
-          if (!minimal) ...[
-            const SizedBox(width: 12),
-            Text(
-              label,
-              style: TextStyle(
-                color: active ? Colors.deepPurple : Colors.grey.shade800,
-                fontWeight: active ? FontWeight.w600 : FontWeight.normal,
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment:
+        isMobile ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            mainAxisAlignment:
+            isMobile ? MainAxisAlignment.center : MainAxisAlignment.start,
+            children: [
+              Container(
+                height: isDesktop ? 48 : isTablet ? 40 : 36,
+                width: isDesktop ? 48 : isTablet ? 40 : 36,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white70, width: 2),
+                  image: const DecorationImage(
+                    image: AssetImage('assets/images/zillha_parishad_logo.jpg'),
+                    fit: BoxFit.cover,
+                  ),
+                ),
               ),
+              if (!isMobile) ...[
+                const SizedBox(width: 12),
+                Text(
+                  "ZP Sangli\nBDO Panel",
+                  style: GoogleFonts.poppins(
+                    fontSize: headerFontSize,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ]
+            ],
+          ),
+          SizedBox(height: isMobile ? 16 : 28),
+
+          // Navigation
+          Expanded(
+            child: ListView(
+              children: [
+                _SidebarItem(
+                  icon: Icons.dashboard_rounded,
+                  label: 'Dashboard',
+                  route: 'dashboard',
+                  active: activeRoute == 'dashboard',
+
+                  minimal: isMobile,
+                  onTap: onItemSelected,
+                ),
+                _SidebarItem(
+                  icon: Icons.account_tree_rounded,
+                  label: 'Schemes',
+                  route: 'schemes',
+                  active: activeRoute == 'schemes',
+
+                  minimal: isMobile,
+                  onTap: onItemSelected,
+                ),
+                _SidebarItem(
+                  icon: Icons.insights_rounded,
+                  label: 'Progress Reports',
+                  route: 'progress',
+                  active: activeRoute == 'progress',
+
+                  minimal: isMobile,
+                  onTap: onItemSelected,
+                ),
+                _SidebarItem(
+                  icon: Icons.apartment_rounded,
+                  label: 'Departments',
+                  route: 'departments',
+                  active: activeRoute == 'departments',
+
+                  minimal: isMobile,
+                  onTap: onItemSelected,
+                ),
+                _SidebarItem(
+                  icon: Icons.account_balance_wallet_rounded,
+                  label: 'Finance',
+                  route: 'finance',
+                  active: activeRoute == 'finance',
+
+                  minimal: isMobile,
+                  onTap: onItemSelected,
+                ),
+                _SidebarItem(
+                  icon: Icons.feedback_rounded,
+                  label: 'Public Feedback',
+                  route: 'feedback',
+                  active: activeRoute == 'feedback',
+
+                  minimal: isMobile,
+                  onTap: onItemSelected,
+                ),
+                _SidebarItem(
+                  icon: Icons.report_problem_rounded,
+                  label: 'Complaints',
+                  route: 'complaints',
+                  active: activeRoute == 'complaints',
+
+                  minimal: isMobile,
+                  onTap: onItemSelected,
+                ),
+                _SidebarItem(
+                  icon: Icons.people_alt_rounded,
+                  label: 'Staff Directory',
+                  route: 'staff',
+                  active: activeRoute == 'staff',
+
+                  minimal: isMobile,
+                  onTap: onItemSelected,
+                ),
+                _SidebarItem(
+                  icon: Icons.settings_rounded,
+                  label: 'Settings',
+                  route: 'settings',
+                  active: activeRoute == 'settings',
+
+                  minimal: isMobile,
+                  onTap: onItemSelected,
+                ),
+              ],
             ),
-          ]
+          ),
         ],
       ),
     );
-
-    if (active && !minimal) {
-      return Container(
-        margin: const EdgeInsets.only(bottom: 6),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        decoration: BoxDecoration(
-          color: Colors.deepPurple.shade50,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: base,
-      );
-    }
-
-    return base;
   }
 }
+
+class _SidebarItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool active;
+  final bool minimal;
+  final String route;
+  final Function(String route)? onTap;
+
+  const _SidebarItem({
+    required this.icon,
+    required this.label,
+    required this.route,
+    this.active = false,
+    this.minimal = false,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Responsive sizes
+    final width = MediaQuery.of(context).size.width;
+    final bool isDesktop = width >= 1024;
+    final bool isTablet = width >= 600 && width < 1024;
+    final bool isMobile = width < 600;
+
+    final double iconSize = isDesktop
+        ? 28
+        : isTablet
+        ? 24
+        : 22;
+
+    final double fontSize = isDesktop
+        ? 20
+        : isTablet
+        ? 18
+        : 16;
+
+    final double horizontalPadding = isDesktop
+        ? 16
+        : isTablet
+        ? 12
+        : 8;
+
+    final bgColor = active ? Colors.white.withOpacity(0.15) : Colors.transparent;
+    final textColor = active ? Colors.white : Colors.white70;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: () => onTap?.call(route),
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 6),
+        padding: EdgeInsets.symmetric(
+          horizontal: minimal ? 4 : horizontalPadding,
+          vertical: 14,
+        ),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisAlignment:
+          minimal ? MainAxisAlignment.center : MainAxisAlignment.start,
+          children: [
+            Icon(icon, color: textColor, size: iconSize),
+            if (!minimal) ...[
+              const SizedBox(width: 12),
+              // Prevent overflow
+              Expanded(
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.poppins(
+                    fontSize: fontSize,
+                    color: textColor,
+                    fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+

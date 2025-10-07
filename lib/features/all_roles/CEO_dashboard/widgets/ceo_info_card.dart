@@ -1,7 +1,7 @@
 // lib/ui/widgets/ceo_info_card.dart
 import 'package:flutter/material.dart';
 
-class   CeoInfoCard extends StatelessWidget {
+class CeoInfoCard extends StatelessWidget {
   final String title;
   final Widget child;
   final VoidCallback? onDownload;
@@ -18,7 +18,7 @@ class   CeoInfoCard extends StatelessWidget {
     return Card(
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      elevation: 6,
+      elevation: 5,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

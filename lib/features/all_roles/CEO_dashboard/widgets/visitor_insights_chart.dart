@@ -1,4 +1,4 @@
-// lib/ui/widgets/visitor_insights_chart.dart
+// lib/ui/widgets/public_visitor_insights_chart.dart
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 

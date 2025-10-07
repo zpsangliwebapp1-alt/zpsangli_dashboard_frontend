@@ -1,103 +1,83 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../../../../core/widgets/breakpoint.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/widgets/dashboard_content.dart';
 import '../../../../core/widgets/sidebar.dart';
-import '../../../../core/widgets/topbar.dart';
-import '../../../../main.dart';
+import '../widgets/bdo_topbar.dart'; // import your topbar
 
-/// Top-level dashboard scaffold (entry point)
-class BdoDashboardPage extends StatelessWidget {
-  const BdoDashboardPage({super.key});
+import 'schemes_screen.dart';
+import 'progress_reports_screen.dart';
+import 'departments_screen.dart';
+import 'finance_screen.dart';
+import 'feedback_screen.dart';
+import 'complaints_screen.dart';
+import 'staff_directory_screen.dart';
+import 'settings_screen.dart';
+
+class BdoHomeLayout extends StatefulWidget {
+  const BdoHomeLayout({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(builder: (context, constraints) {
-      final width = constraints.maxWidth;
-
-      if (width >= Breakpoints.desktop) {
-        return const BdoDashboardDesktopDashboard();
-      } else if (width >= Breakpoints.tablet) {
-        return const BdoDashboardTabletDashboard();
-      } else {
-        return const BdoDashboardMobileDashboard();
-      }
-    });
-  }
+  State<BdoHomeLayout> createState() => _BdoHomeLayoutState();
 }
 
-/////////////// DESKTOP LAYOUT ///////////////
-class BdoDashboardDesktopDashboard extends StatelessWidget {
-  const BdoDashboardDesktopDashboard({super.key});
+class _BdoHomeLayoutState extends State<BdoHomeLayout> {
+  String _activeRoute = 'dashboard';
+
+  Widget _getScreen() {
+    switch (_activeRoute) {
+      case 'schemes':
+        return const SchemesScreen();
+      case 'progress':
+        return const ProgressReportsScreen();
+      case 'departments':
+        return const DepartmentsScreen();
+      case 'finance':
+        return const FinanceScreen();
+      case 'feedback':
+        return const FeedbackScreen();
+      case 'complaints':
+        return const ComplaintsScreen();
+      case 'staff':
+        return const StaffDirectoryScreen();
+      case 'settings':
+        return const SettingsScreen();
+      default:
+        return const DashboardContent();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // We keep the page background subtle like the screenshot
-      body: SafeArea(
-        child: Row(
-          children: [
-            // Sidebar - fixed width
-            const SizedBox(width: 260, child: Sidebar()),
-            // Main content
-            Expanded(
-              child: Column(
-                children: const [
-                  TopBar(),
-                  Expanded(child: DashboardContent()),
-                ],
-              ),
-            )
-          ],
-        ),
-      ),
-    );
-  }
-}
+      body: Row(
+        children: [
+          // Sidebar
+          BdoSidebar(
+            activeRoute: _activeRoute,
+            onItemSelected: (route) {
+              setState(() => _activeRoute = route);
+            },
+          ),
+          // Main content with topbar
+          Expanded(
+            child: Column(
+              children: [
+                // 🔹 BDO TopBar
+                const BdoTopBar(),
 
-/////////////// TABLET LAYOUT ///////////////
-class BdoDashboardTabletDashboard extends StatelessWidget {
-  const BdoDashboardTabletDashboard({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: const [
-            TopBar(),
-            Expanded(
-              child: Row(
-                children: [
-                  SizedBox(width: 88, child: Sidebar(minimal: true)),
-                  Expanded(child: DashboardContent()),
-                ],
-              ),
+                // 🔹 Main screen content
+                Expanded(
+                  child: Container(
+                    color: const Color(0xFFF8F9FB),
+                    padding: const EdgeInsets.all(20),
+                    child: _getScreen(),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/////////////// MOBILE LAYOUT ///////////////
-class BdoDashboardMobileDashboard extends StatelessWidget {
-  const BdoDashboardMobileDashboard({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    // For mobile we show a top nav + single-column scrollable content
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dabang'),
-        actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.search)),
-          IconButton(onPressed: () {}, icon: const Icon(Icons.notifications_none)),
+          ),
         ],
       ),
-      drawer: const Drawer(child: Sidebar()), // collapsible drawer on mobile
-      body: const SafeArea(child: SingleChildScrollView(child: DashboardContent())),
     );
   }
 }

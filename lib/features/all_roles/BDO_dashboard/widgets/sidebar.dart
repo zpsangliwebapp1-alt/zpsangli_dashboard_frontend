@@ -1,170 +1,242 @@
-// lib/ui/widgets/ekatmik_balvikas_yojna_sidebar.dart
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class Sidebar extends StatelessWidget {
   final bool minimal;
-  const Sidebar({super.key, this.minimal = false});
+  final String activeRoute;
+  final Function(String route)? onItemSelected;
+
+  const Sidebar({
+    super.key,
+    this.minimal = false,
+    this.activeRoute = "dashboard",
+    this.onItemSelected,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: minimal ? 80 : 250,
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-      color: Colors.transparent,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [const Color(0xFF0D47A1), const Color(0xFF1976D2)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.12),
+            blurRadius: 12,
+            offset: const Offset(2, 0),
+          )
+        ],
+      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+        minimal ? CrossAxisAlignment.center : CrossAxisAlignment.start,
         children: [
-          // Logo / App name
+          // 🔷 Header (Zilla Parishad logo + text)
           Row(
+            mainAxisAlignment:
+            minimal ? MainAxisAlignment.center : MainAxisAlignment.start,
             children: [
               Container(
-                height: 44,
-                width: 44,
+                height: 48,
+                width: 48,
                 decoration: BoxDecoration(
-                  color: Colors.deepPurple,
-                  borderRadius: BorderRadius.circular(12),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white70, width: 2),
+                  image: const DecorationImage(
+                    image: AssetImage('assets/images/zillha_parishad_logo.jpg'),
+                    fit: BoxFit.cover,
+                  ),
                 ),
-                child: const Center(child: Icon(Icons.dashboard, color: Colors.white)),
               ),
               if (!minimal) ...[
                 const SizedBox(width: 12),
-                const Text(
-                  'Dabang',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                Text(
+                  "ZP Sangli\nBDO Panel",
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ]
             ],
           ),
           const SizedBox(height: 28),
 
-          // Navigation items
+          // 🔹 Navigation Menu
           Expanded(
             child: ListView(
               children: [
-                SidebarItem(
-                  icon: Icons.pie_chart,
+                _SidebarItem(
+                  icon: Icons.dashboard_rounded,
                   label: 'Dashboard',
-                  active: true,
+                  route: 'dashboard',
+                  active: activeRoute == 'dashboard',
                   minimal: minimal,
+                  onTap: onItemSelected,
                 ),
-                SidebarItem(icon: Icons.leaderboard, label: 'Leaderboard', minimal: minimal),
-                SidebarItem(icon: Icons.shopping_cart, label: 'Order', minimal: minimal),
-                SidebarItem(icon: Icons.store, label: 'Products', minimal: minimal),
-                SidebarItem(icon: Icons.bar_chart, label: 'Sales Report', minimal: minimal),
-                SidebarItem(icon: Icons.message, label: 'Messages', minimal: minimal),
-                SidebarItem(icon: Icons.settings, label: 'Settings', minimal: minimal),
-                SidebarItem(icon: Icons.logout, label: 'Sign Out', minimal: minimal),
+                _SidebarItem(
+                  icon: Icons.account_tree_rounded,
+                  label: 'Schemes',
+                  route: 'schemes',
+                  active: activeRoute == 'schemes',
+                  minimal: minimal,
+                  onTap: onItemSelected,
+                ),
+                _SidebarItem(
+                  icon: Icons.insights_rounded,
+                  label: 'Progress Reports',
+                  route: 'progress',
+                  active: activeRoute == 'progress',
+                  minimal: minimal,
+                  onTap: onItemSelected,
+                ),
+                _SidebarItem(
+                  icon: Icons.apartment_rounded,
+                  label: 'Departments',
+                  route: 'departments',
+                  active: activeRoute == 'departments',
+                  minimal: minimal,
+                  onTap: onItemSelected,
+                ),
+                _SidebarItem(
+                  icon: Icons.account_balance_wallet_rounded,
+                  label: 'Finance',
+                  route: 'finance',
+                  active: activeRoute == 'finance',
+                  minimal: minimal,
+                  onTap: onItemSelected,
+                ),
+                _SidebarItem(
+                  icon: Icons.feedback_rounded,
+                  label: 'Public Feedback',
+                  route: 'feedback',
+                  active: activeRoute == 'feedback',
+                  minimal: minimal,
+                  onTap: onItemSelected,
+                ),
+                _SidebarItem(
+                  icon: Icons.report_problem_rounded,
+                  label: 'Complaints',
+                  route: 'complaints',
+                  active: activeRoute == 'complaints',
+                  minimal: minimal,
+                  onTap: onItemSelected,
+                ),
+                _SidebarItem(
+                  icon: Icons.people_alt_rounded,
+                  label: 'Staff Directory',
+                  route: 'staff',
+                  active: activeRoute == 'staff',
+                  minimal: minimal,
+                  onTap: onItemSelected,
+                ),
+                _SidebarItem(
+                  icon: Icons.settings_rounded,
+                  label: 'Settings',
+                  route: 'settings',
+                  active: activeRoute == 'settings',
+                  minimal: minimal,
+                  onTap: onItemSelected,
+                ),
               ],
             ),
           ),
 
-          // Dabang Pro card (only in full sidebar)
-          if (!minimal) ...[
-            const SizedBox(height: 12),
+          // 🔸 Footer Info
+          if (!minimal)
             Container(
-              margin: const EdgeInsets.symmetric(vertical: 8),
+              margin: const EdgeInsets.only(top: 20),
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: Colors.deepPurple.shade400,
+                color: Colors.white.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
-                    blurRadius: 8,
-                  )
-                ],
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  const Text(
-                    'Dabang Pro',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Get access to all\nfeatures on tebuntas',
-                    style: TextStyle(color: Colors.white70, fontSize: 12),
-                  ),
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: Colors.deepPurple,
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                  const Icon(Icons.info_outline, color: Colors.white70, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Block Development Officer\nZilla Parishad Sangli',
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        color: Colors.white70,
                       ),
-                      child: const Text('Get Pro'),
                     ),
                   ),
                 ],
               ),
-            )
-          ]
+            ),
         ],
       ),
     );
   }
 }
 
-class SidebarItem extends StatelessWidget {
+// ─────────────────────────────
+// 🔹 Sidebar Item Widget
+// ─────────────────────────────
+class _SidebarItem extends StatelessWidget {
   final IconData icon;
   final String label;
   final bool active;
   final bool minimal;
+  final String route;
+  final Function(String route)? onTap;
 
-  const SidebarItem({
-    super.key,
+  const _SidebarItem({
     required this.icon,
     required this.label,
+    required this.route,
     this.active = false,
     this.minimal = false,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final base = Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            size: 20,
-            color: active ? Colors.deepPurple : Colors.grey.shade700,
-          ),
-          if (!minimal) ...[
-            const SizedBox(width: 12),
-            Text(
-              label,
-              style: TextStyle(
-                color: active ? Colors.deepPurple : Colors.grey.shade800,
-                fontWeight: active ? FontWeight.w600 : FontWeight.normal,
+    final bgColor = active ? Colors.white.withOpacity(0.15) : Colors.transparent;
+    final textColor = active ? Colors.white : Colors.white70;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: () => onTap?.call(route),
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 6),
+        padding: EdgeInsets.symmetric(
+          horizontal: minimal ? 0 : 12,
+          vertical: 14,
+        ),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisAlignment:
+          minimal ? MainAxisAlignment.center : MainAxisAlignment.start,
+          children: [
+            Icon(icon, color: textColor, size: 26), // larger icon
+            if (!minimal) ...[
+              const SizedBox(width: 16),
+              Text(
+                label,
+                style: GoogleFonts.poppins(
+                  fontSize: 18, // larger font size
+                  color: textColor,
+                  fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                  letterSpacing: 0.5,
+                ),
               ),
-            ),
-          ]
-        ],
+            ],
+          ],
+        ),
       ),
     );
-
-    if (active && !minimal) {
-      return Container(
-        margin: const EdgeInsets.only(bottom: 6),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        decoration: BoxDecoration(
-          color: Colors.deepPurple.shade50,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: base,
-      );
-    }
-
-    return base;
   }
 }

@@ -1,9 +1,0 @@
-{
-  "ICDS": [
-    { "block": "Atpadi", "Anganwadi Centers": 12, "Children Enrolled": 1020, "Malnutrition Cases": 32 },
-    { "block": "Jath", "Anganwadi Centers": 13, "Children Enrolled": 1040, "Malnutrition Cases": 33 }
-  ],
-  "PWD": [
-    { "block": "Atpadi", "Roads Constructed (km)": 120, "Bridges Built": 12, "Buildings Completed": 18 }
-  ]
-}

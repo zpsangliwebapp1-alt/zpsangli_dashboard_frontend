@@ -1,51 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../widgets/responsive_texts.dart';
+import '../constants/app_fonts.dart';
 
 class AppTextStyles {
   // Headlines
   static TextStyle headline1(BuildContext context) => GoogleFonts.poppins(
-    fontSize: context.scaledFont(32),
-    fontWeight: FontWeight.bold,
+    fontSize: 32,
+    fontWeight: AppFonts.bold,
     color: Colors.black,
   );
 
   static TextStyle headline2(BuildContext context) => GoogleFonts.poppins(
-    fontSize: context.scaledFont(24),
-    fontWeight: FontWeight.w600,
+    fontSize: 24,
+    fontWeight: AppFonts.semiBold,
     color: Colors.black,
   );
 
-  // Body text
+  // Body
   static TextStyle body(BuildContext context) => GoogleFonts.poppins(
-    fontSize: context.scaledFont(16),
-    fontWeight: FontWeight.normal,
+    fontSize: 16,
+    fontWeight: AppFonts.regular,
     color: Colors.black87,
   );
 
   static TextStyle bodySmall(BuildContext context) => GoogleFonts.poppins(
-    fontSize: context.scaledFont(14),
-    fontWeight: FontWeight.w400,
+    fontSize: 14,
+    fontWeight: AppFonts.regular,
     color: Colors.black54,
   );
 
   // Buttons
   static TextStyle button(BuildContext context) => GoogleFonts.poppins(
-    fontSize: context.scaledFont(16),
-    fontWeight: FontWeight.w600,
+    fontSize: 16,
+    fontWeight: AppFonts.semiBold,
     color: Colors.white,
   );
 
   static TextStyle link(BuildContext context) => GoogleFonts.poppins(
-    fontSize: context.scaledFont(14),
-    fontWeight: FontWeight.w500,
+    fontSize: 14,
+    fontWeight: AppFonts.medium,
     color: Colors.blue,
     decoration: TextDecoration.underline,
-  );
-
-  static const dropdownText = TextStyle(
-    fontSize: 14,
-    fontWeight: FontWeight.w500,
-    color: Colors.white,
   );
 }

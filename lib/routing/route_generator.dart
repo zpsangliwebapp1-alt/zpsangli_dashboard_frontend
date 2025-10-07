@@ -31,7 +31,7 @@ class RouteGenerator {
 
     ///bdo dashboard
       case RouteNames.bdo_dashboard:
-        return MaterialPageRoute(builder: (_) => const BdoDashboardPage());
+        return MaterialPageRoute(builder: (_) => const BdoHomeLayout());
 
     ///17 Department dashboard
 

@@ -71,9 +71,10 @@ class DashboardContent extends StatelessWidget {
               Expanded(
                 child: InfoCard(
                   title: 'Total Revenue',
-                  child: const RevenueChart(),
+                  child: RevenueChart(revenueData: _getRevenueData()), // ✅ call the method
                 ),
               ),
+
               const SizedBox(width: 16),
               Expanded(
                 child: InfoCard(
@@ -126,5 +127,16 @@ class DashboardContent extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Map<String, double> _getRevenueData() {
+    return {
+      "Jan": 12000,
+      "Feb": 15000,
+      "Mar": 9000,
+      "Apr": 17000,
+      "May": 13000,
+      "Jun": 18000,
+    };
   }
 }

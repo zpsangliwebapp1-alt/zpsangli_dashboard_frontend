@@ -1,12 +1,15 @@
-import 'dart:ui';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
+
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/constants/app_text_styles.dart';
-import '../../../../core/local_provider/local_provider.dart';
+import '../../../../core/constants/role_ids.dart';
 import '../../../../core/widgets/responsive_layout.dart';
-import '../../../../routing/route_names.dart';
+import '../../provider/auth_provider.dart';
+import '../../../all_roles/BDO_dashboard/presentation/bdo_dashboard_page.dart';
+import '../../../all_roles/CEO_dashboard/presentation/ceo_dashboard_page.dart';
+import '../../../all_roles/ekatmik_balvikas_yojna_dashboard/presentation/ekatmik_balvikas_yojna_dashboard_page.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
@@ -21,7 +24,6 @@ class LoginPage extends StatelessWidget {
   }
 }
 
-/// ---------------- MOBILE ----------------
 class _LoginMobile extends StatelessWidget {
   const _LoginMobile();
 
@@ -45,28 +47,6 @@ class _LoginMobile extends StatelessWidget {
   }
 }
 
-/// ---------------- TABLET ----------------
-class _LoginTablet extends StatelessWidget {
-  const _LoginTablet();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      body: Row(
-        children: [
-          const Expanded(flex: 5, child: _LoginForm()),
-          Expanded(
-            flex: 5,
-            child: _safeImage(AppStrings.login_page_image, fit: BoxFit.cover),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// ---------------- DESKTOP ----------------
 class _LoginDesktop extends StatelessWidget {
   const _LoginDesktop();
 
@@ -79,17 +59,13 @@ class _LoginDesktop extends StatelessWidget {
           _safeImage(AppStrings.login_page_image, fit: BoxFit.cover),
           Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                maxWidth: 480,
-                maxHeight: 600,
-              ),
+              constraints: const BoxConstraints(maxWidth: 480, maxHeight: 600),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(20),
                 child: Container(
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 50, vertical: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 16),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15), // transparent
+                    color: Colors.white.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(color: Colors.white.withOpacity(0.3)),
                     boxShadow: [
@@ -114,9 +90,49 @@ class _LoginDesktop extends StatelessWidget {
   }
 }
 
-/// ---------------- LOGIN FORM ----------------
-class _LoginForm extends StatelessWidget {
+class _LoginForm extends StatefulWidget {
   const _LoginForm({super.key});
+
+  @override
+  State<_LoginForm> createState() => _LoginFormState();
+}
+
+class _LoginFormState extends State<_LoginForm> {
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  void _navigateByRole(int? roleId) {
+    Widget page;
+    switch (roleId) {
+      case RoleIds.ceo:
+        page = const CeoDashboardPage();
+        break;
+      case RoleIds.bdo:
+        page = const BdoHomeLayout();
+        break;
+      case RoleIds.department:
+      case RoleIds.departmentUser:
+      case RoleIds.additionalCeo:
+      case RoleIds.publicUser:
+        page = const EkatmikBalvikasYojnaDashboardPage();
+        break;
+      default:
+        page = const LoginPage();
+    }
+
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => page),
+          (route) => false,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -126,7 +142,7 @@ class _LoginForm extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // 🔹 Language Dropdown (top-right)
+            // 🔹 Language Dropdown
             Align(
               alignment: Alignment.topRight,
               child: Padding(
@@ -135,45 +151,22 @@ class _LoginForm extends StatelessWidget {
                   value: context.locale,
                   underline: const SizedBox(),
                   icon: const Icon(Icons.language, color: Colors.white),
-                  dropdownColor: Colors.black87, // Optional: dropdown background
-                  items: [
-                    DropdownMenuItem(
-                      value: const Locale('en'),
-                      child: Text(
-                        'English',
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ),
-                    DropdownMenuItem(
-                      value: const Locale('mr'),
-                      child: Text(
-                        'मराठी',
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ),
+                  dropdownColor: Colors.black87,
+                  items: const [
+                    DropdownMenuItem(value: Locale('en'), child: Text('English', style: TextStyle(color: Colors.white))),
+                    DropdownMenuItem(value: Locale('mr'), child: Text('मराठी', style: TextStyle(color: Colors.white))),
                   ],
-                  onChanged: (Locale? locale) {
-                    if (locale != null) {
-                      context.setLocale(locale); // updates all .tr() texts instantly
-                    }
+                  onChanged: (locale) {
+                    if (locale != null) context.setLocale(locale);
                   },
                 ),
               ),
             ),
 
-
-            // 🔹 Logo
             ClipOval(
-              child: _safeImage(
-                AppStrings.zpLogo,
-                height: 120,
-                width: 120,
-                fit: BoxFit.fill,
-              ),
+              child: _safeImage(AppStrings.zpLogo, height: 120, width: 120, fit: BoxFit.fill),
             ),
             const SizedBox(height: 20),
-
-            // 🔹 Welcome Texts
             Text(
               'welcomeBack'.tr(),
               style: AppTextStyles.headline1(context)?.copyWith(
@@ -192,44 +185,40 @@ class _LoginForm extends StatelessWidget {
             ),
             const SizedBox(height: 28),
 
-            // 🔹 Email Field
-            _buildTextField(
-              context,
-              hint: 'emailMobile'.tr(),
-              icon: Icons.email_outlined,
-            ),
+            _buildTextField(hint: 'emailMobile'.tr(), icon: Icons.email_outlined, controller: emailController),
             const SizedBox(height: 16),
-
-            // 🔹 Password Field
-            _buildTextField(
-              context,
-              hint: 'password'.tr(),
-              icon: Icons.lock_outline,
-              isPassword: true,
-            ),
+            _buildTextField(hint: 'password'.tr(), icon: Icons.lock_outline, controller: passwordController, isPassword: true),
             const SizedBox(height: 28),
 
-            // 🔹 Login Button
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pushNamed(RouteNames.ceo_dashboard);
+              child: Consumer<AuthProvider>(
+                builder: (context, auth, _) {
+                  return ElevatedButton(
+                    onPressed: auth.loading
+                        ? null
+                        : () async {
+                      final success = await auth.login(emailController.text.trim(), passwordController.text.trim());
+                      if (!mounted) return;
+
+                      if (success) {
+                        _navigateByRole(auth.roleId);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Invalid credentials')),
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: auth.loading
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : Text('login'.tr(), style: AppTextStyles.button(context)?.copyWith(fontWeight: FontWeight.bold, color: Colors.white)),
+                  );
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  'login'.tr(),
-                  style: AppTextStyles.button(context)?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
               ),
             ),
             const SizedBox(height: 24),
@@ -239,11 +228,16 @@ class _LoginForm extends StatelessWidget {
     );
   }
 
-  Widget _buildTextField(BuildContext context,
-      {required String hint, required IconData icon, bool isPassword = false}) {
+  Widget _buildTextField({
+    required String hint,
+    required IconData icon,
+    bool isPassword = false,
+    required TextEditingController controller,
+  }) {
     return SizedBox(
       width: 330,
       child: TextField(
+        controller: controller,
         obscureText: isPassword,
         decoration: InputDecoration(
           hintText: hint,
@@ -265,20 +259,13 @@ class _LoginForm extends StatelessWidget {
   }
 }
 
-/// ---------------- SAFE IMAGE WIDGET ----------------
-Widget _safeImage(
-    String assetPath, {
-      double? height,
-      double? width,
-      BoxFit? fit,
-    }) {
+Widget _safeImage(String assetPath, {double? height, double? width, BoxFit? fit}) {
   return Image.asset(
     assetPath,
     height: height,
     width: width,
     fit: fit,
     errorBuilder: (context, error, stackTrace) {
-      // Fallback if asset not found
       return Container(
         height: height,
         width: width,
@@ -289,3 +276,5 @@ Widget _safeImage(
     },
   );
 }
+
+

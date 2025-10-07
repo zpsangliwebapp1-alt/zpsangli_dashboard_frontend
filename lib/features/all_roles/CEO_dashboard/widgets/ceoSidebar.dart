@@ -86,7 +86,7 @@ class CeoSidebar extends StatelessWidget {
           Expanded(
             child: ListView(
               padding: EdgeInsets.symmetric(
-                  horizontal: minimal ? 0 : AppSizes.spacing / 2, vertical: 4),
+                  horizontal: minimal ? 0 : AppSizes.spacingS / 2, vertical: 4),
               children: [
                 _buildNavItem(Icons.dashboard_outlined, "dashboard".tr(), 0,
                     context, minimal),
@@ -228,7 +228,7 @@ class CeoSidebar extends StatelessWidget {
           curve: Curves.easeInOut,
           margin: const EdgeInsets.symmetric(vertical: 4),
           padding: EdgeInsets.symmetric(
-              horizontal: minimal ? 0 : AppSizes.padding, vertical: 12),
+              horizontal: minimal ? 0 : AppSizes.paddingS, vertical: 12),
           decoration: BoxDecoration(
             color: isActive
                 ? AppColors.primary.withOpacity(0.15)
@@ -241,7 +241,7 @@ class CeoSidebar extends StatelessWidget {
             children: [
               Icon(icon, size: AppSizes.iconSize, color: baseColor),
               if (!minimal) ...[
-                const SizedBox(width: AppSizes.spacing),
+                SizedBox(width: AppSizes.spacingS),
                 Flexible(
                     child: Text(label,
                         style: textStyle, overflow: TextOverflow.ellipsis)),
@@ -272,7 +272,7 @@ class _UrgentAlertBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppSizes.spacing / 2),
+      margin: EdgeInsets.symmetric(horizontal: AppSizes.spacingS / 2),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.orange.shade50,

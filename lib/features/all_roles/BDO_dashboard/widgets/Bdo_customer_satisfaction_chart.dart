@@ -1,4 +1,4 @@
-// lib/ui/widgets/Bdo_customer_satisfaction_chart.dart
+// lib/ui/widgets/additional_ceo_customer_satisfaction_chart.dart
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
@@ -8,7 +8,7 @@ class CeoCustomerSatisfactionChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 200,
+      height: 500,
       child: LineChart(
         LineChartData(
           gridData: FlGridData(
