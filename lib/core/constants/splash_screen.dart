@@ -1,11 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
-
 import '../../routing/route_names.dart';
-
 import '../utils/fade_route.dart';
-import '../utils/responsive.dart';
 import '../widgets/responsive_layout.dart';
 import 'app_strings.dart';
 

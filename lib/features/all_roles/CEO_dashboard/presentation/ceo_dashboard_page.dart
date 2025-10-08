@@ -1,17 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:zp_sangali_dashboard_flutter/features/all_roles/CEO_dashboard/presentation/department_sidebar_screen.dart';
 import 'package:zp_sangali_dashboard_flutter/features/all_roles/CEO_dashboard/presentation/uploaded_file_list_screen.dart';
 import 'package:zp_sangali_dashboard_flutter/features/all_roles/CEO_dashboard/widgets/ceoSidebar.dart';
-import 'package:zp_sangali_dashboard_flutter/features/all_roles/CEO_dashboard/widgets/ceo_dashboard_content.dart';
 import 'package:zp_sangali_dashboard_flutter/features/all_roles/CEO_dashboard/widgets/excel_upload_button.dart';
-import '../../../../core/widgets/breakpoint.dart';
 import '../../../../core/widgets/dashboard_content.dart';
-import '../../../../core/widgets/sidebar.dart';
-import '../../../../core/widgets/topbar.dart';
-import '../../../../main.dart';
-import '../../BDO_dashboard/widgets/Bdo_dashboard_content.dart';
 import '../../ceo_dashboard/widgets/ceo_topbar.dart';
+import 'ceo_dashboard_content.dart';
 
 /// Top-level dashboard scaffold (entry point)
 class CeoDashboardPage extends StatefulWidget {

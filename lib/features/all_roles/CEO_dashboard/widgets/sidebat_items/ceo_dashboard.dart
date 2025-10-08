@@ -8,8 +8,7 @@ import '../../../BDO_dashboard/widgets/Bdo_dashboard_content.dart';
 import '../../../ceo_dashboard/widgets/ceoSidebar.dart';
 
 import '../../../ceo_dashboard/widgets/ceo_topbar.dart';
-import '../ceo_dashboard_content.dart';
-import 'ceo_dashboard_content.dart';
+import '../../presentation/ceo_dashboard_content.dart';
 import 'finance_content.dart';
 import 'gramvikas_adhikari_content.dart';
 import 'logout_content.dart';
