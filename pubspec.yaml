@@ -40,6 +40,8 @@ dependencies:
   flutter_staggered_grid_view:
   animated_flip_counter: ^0.3.4
   flutter_animate: ^4.5.2
+  image_picker:
+  multi_select_flutter: ^4.1.3
 
 dev_dependencies:
   flutter_test:

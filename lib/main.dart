@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:zp_sangali_dashboard_flutter/features/all_roles/CEO_dashboard/repository/create_bdo_repository.dart';
 import 'package:zp_sangali_dashboard_flutter/features/auth/repository/auth_repository.dart';
 
 import 'core/constants/app_theme.dart';
@@ -10,9 +11,12 @@ import 'core/constants/splash_screen.dart';
 import 'core/local_provider/local_provider.dart';
 import 'core/di/injection.dart';
 import 'core/network/dio_client.dart';
+import 'features/all_roles/CEO_dashboard/provider/broadcast_provider.dart';
 import 'features/all_roles/CEO_dashboard/provider/ceo_json_data_provider.dart';
+import 'features/all_roles/CEO_dashboard/provider/create_bdo_provider.dart';
 import 'features/all_roles/CEO_dashboard/provider/upload_file_provider.dart';
 import 'features/all_roles/CEO_dashboard/provider/uploaded_file_list_provider.dart';
+import 'features/all_roles/CEO_dashboard/repository/broadcaste_repository.dart';
 import 'features/all_roles/CEO_dashboard/repository/ceo_json_data_repository.dart';
 import 'features/all_roles/CEO_dashboard/repository/upload_file_repository.dart';
 import 'features/all_roles/CEO_dashboard/repository/uploaded_file_list_repository.dart';
@@ -40,19 +44,22 @@ Future<void> main() async {
       ],
       path: 'assets/translations', // folder for en.json & mr.json
       fallbackLocale: const Locale('en'),
-      child: const MyApp(),
+      child:  MyApp(),
     ),
   );
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+   MyApp({super.key});
+
+  final bdoRepository = BdoRepository(baseUrl: "https://rdprgovapi.atyoureye.com");
 
   @override
   Widget build(BuildContext context) {
     final dioClient = DioClient();
     final departmentRepo = DepartmentRepository(dioClient);
     final authRepository = AuthRepository(dioClient); // <-- add this
+    final broadcastRepo = BroadcastRepository(dioClient: dioClient);
 
 
     return MultiProvider(
@@ -74,10 +81,16 @@ class MyApp extends StatelessWidget {
           ),
         ),
 
+        ChangeNotifierProvider(create: (_) => CreateBdoProvider(repository: bdoRepository)),
 
-        ChangeNotifierProvider(
-          create: (_) => CeoDashboardProvider(),
-        ),
+        ChangeNotifierProvider(create: (_) => BroadcastProvider(repository: broadcastRepo)),
+
+
+
+
+        // ChangeNotifierProvider(
+        //   create: (_) => CeoDashboardProvider(),
+        // ),
 
 
         /// 🏗️ Blocks

@@ -5,7 +5,9 @@ import 'package:zp_sangali_dashboard_flutter/features/all_roles/CEO_dashboard/wi
 import 'package:zp_sangali_dashboard_flutter/features/all_roles/CEO_dashboard/widgets/excel_upload_button.dart';
 import '../../../../core/widgets/dashboard_content.dart';
 import '../../ceo_dashboard/widgets/ceo_topbar.dart';
+import 'broadcast_screen.dart';
 import 'ceo_dashboard_content.dart';
+import 'create_user.dart';
 
 /// Top-level dashboard scaffold (entry point)
 class CeoDashboardPage extends StatefulWidget {
@@ -58,8 +60,12 @@ class _CeoDashboardPageState extends State<CeoDashboardPage> {
       case 0:
         return CeoDashboardContent();
       case 1:
-        return  Container();
+        return  CreateAccountScreen();
       case 2:
+        return const BroadcastScreen();
+      // case 2:
+      //   return const UploadedFileListScreen();
+      case 3:
         return const UploadedFileListScreen();
       default:
         return Center(child: const ExcelUploadButton());

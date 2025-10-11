@@ -1,15 +1,5 @@
-
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:provider/provider.dart';
-
 import '../controller/ceo_dashboard_controller.dart';
-import '../models/json_data_model.dart';
-
-/// =======================
-/// FILTER ROW
-/// =======================
 
 class FilterRow extends StatelessWidget {
   final CeoDashboardController ctrl;
@@ -19,8 +9,9 @@ class FilterRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final width = MediaQuery.of(context).size.width;
-    final isMobile = width < 800;
+
+    // Extract department list from provider
+    final departments = ctrl.departmentProvider.departments;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -44,35 +35,72 @@ class FilterRow extends StatelessWidget {
         alignment: WrapAlignment.spaceBetween,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
+          /// 🔹 Department Dropdown
           _dropdown(
             "Department",
             ctrl.selectedDepartment,
-            ctrl.departmentProvider.departments.map((e) => e.name).toList(),
-                (v) => ctrl.updateDepartment(v ?? ""),
+            departments.map((e) => e.name).toList(),
+                (v) {
+              if (v != null && v.isNotEmpty) {
+                // Find the full department object
+                final selectedDept = departments.firstWhere(
+                      (d) => d.name == v,
+                  orElse: () => departments.first,
+                );
+
+                ctrl.updateDepartment(v);
+
+                // ✅ Print both ID and Name
+                debugPrint(
+                    "🏢 Selected Department → ID: ${selectedDept.id}, Name: ${selectedDept.name}");
+              }
+            },
           ),
+
+          /// 🔹 Block Dropdown
           _dropdown(
             "Block",
             ctrl.selectedBlock,
             ctrl.blocks.map((b) => b["name"].toString()).toList(),
-                (v) => ctrl.updateBlock(v ?? ""),
+                (v) {
+              if (v != null) {
+                ctrl.updateBlock(v);
+                debugPrint("🧱 Selected Block: $v");
+              }
+            },
           ),
+
+          /// 🔹 Month Dropdown
           _dropdown(
             "Month",
             ctrl.selectedMonth,
             ctrl.apiMonths,
-                (v) => ctrl.updateMonth(v ?? ""),
+                (v) {
+              if (v != null) {
+                ctrl.updateMonth(v);
+                debugPrint("📅 Selected Month: $v");
+              }
+            },
           ),
+
+          /// 🔹 Year Dropdown
           _dropdown(
             "Year",
             ctrl.selectedYear,
             ctrl.apiYears,
-                (v) => ctrl.updateYear(v ?? ""),
+                (v) {
+              if (v != null) {
+                ctrl.updateYear(v);
+                debugPrint("🗓️ Selected Year: $v");
+              }
+            },
           ),
         ],
       ),
     );
   }
 
+  /// Dropdown builder widget
   Widget _dropdown(
       String label,
       String value,
@@ -103,7 +131,8 @@ class FilterRow extends StatelessWidget {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.blueAccent, width: 1.3),
+            borderSide:
+            const BorderSide(color: Colors.blueAccent, width: 1.3),
           ),
         ),
         icon: const Icon(

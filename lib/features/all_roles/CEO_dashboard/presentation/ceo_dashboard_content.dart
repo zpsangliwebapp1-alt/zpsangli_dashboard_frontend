@@ -11,8 +11,9 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../auth/provider/auth_provider.dart';
 import '../../../departments/providers/department_provider.dart';
+import '../../ceo_dashboard/presentation/department_overview_card.dart';
 import '../controller/ceo_dashboard_controller.dart';
-import '../presentation/department_overview_card.dart';
+import '../presentation/department_overview_card.dart' hide DepartmentOverviewCard;
 import '../widgets/filter_row.dart';
 
 class CeoDashboardContent extends StatelessWidget {
@@ -58,6 +59,8 @@ class _DashboardBody extends StatelessWidget {
     final block = ctrl.selectedBlock;
     final department = ctrl.selectedDepartment;
 
+
+
     // Build monthlyTotals for charts
     final monthlyTotals = {
       for (var item in ctrl.items)
@@ -92,7 +95,9 @@ class _DashboardBody extends StatelessWidget {
               selectedMonth: ctrl.selectedMonth,
               selectedYear: ctrl.selectedYear,
               satisfactionData: satisfactionData,
+              departmentId: ctrl.selectedDepartmentId ?? 0, // departmentId from selected
             ),
+
             const SizedBox(height: 24),
             // DashboardGrid(mobile: false)
           ],
