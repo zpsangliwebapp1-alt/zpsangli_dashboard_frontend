@@ -1,18 +1,18 @@
-import 'package:zp_sangali_dashboard_flutter/core/network/dio_client.dart';
+import 'package:dio/dio.dart';
+import '../../../../core/network/dio_client.dart';
 import '../model/departments_model.dart';
-import 'package:dio/dio.dart'; // <-- Add this import
 
 class DepartmentRepository {
   final DioClient dioClient;
 
-  DepartmentRepository(this.dioClient);
+  DepartmentRepository({required this.dioClient});
+
+  /// Refresh Token API
   Future<String> refreshToken(String oldRefreshToken) async {
     try {
-      final response = await dioClient.dio.post(
+      final response = await dioClient.post(
         '/auth/refresh',
-        data: {
-          'refreshToken': oldRefreshToken,
-        },
+        data: {'refreshToken': oldRefreshToken},
         options: Options(
           headers: {'Content-Type': 'application/json'},
         ),
@@ -26,27 +26,27 @@ class DepartmentRepository {
         throw Exception('Invalid refresh response');
       }
 
-      // TODO: Save newToken & newRefreshToken in secure storage
+      // TODO: Save tokens to secure storage
       return newToken;
+    } on DioError catch (e) {
+      throw Exception(e.response?.data['message'] ?? 'Failed to refresh token');
     } catch (e) {
       throw Exception('Failed to refresh token: $e');
     }
   }
 
-
+  /// Fetch Departments
   Future<List<Department>> fetchDepartments(String token) async {
     try {
-      final response = await dioClient.dio.get(
+      final response = await dioClient.get(
         '/Org/departments',
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $token',
-          },
-        ),
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
       final data = response.data as List;
       return data.map((json) => Department.fromJson(json)).toList();
+    } on DioError catch (e) {
+      throw Exception(e.response?.data['message'] ?? 'Failed to load departments');
     } catch (e) {
       throw Exception('Failed to load departments: $e');
     }

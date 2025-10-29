@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
+import 'package:zp_sangali_dashboard_flutter/features/all_roles/public_dashboard/widgets/public_dashboard_content.dart';
+import 'package:dio/dio.dart'; // <-- Add this
 
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/role_ids.dart';
 import '../../../../core/widgets/responsive_layout.dart';
+import '../../../all_roles/public_dashboard/presentation/public_dashboard_page.dart';
 import '../../provider/auth_provider.dart';
 import '../../../all_roles/BDO_dashboard/presentation/bdo_dashboard_page.dart';
 import '../../../all_roles/CEO_dashboard/presentation/ceo_dashboard_page.dart';
@@ -100,11 +103,18 @@ class _LoginForm extends StatefulWidget {
 class _LoginFormState extends State<_LoginForm> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final TextEditingController usernameController = TextEditingController(); // For registration
+  final TextEditingController regPasswordController = TextEditingController();
+
+  bool isRegisterMode = false; // toggle between login and registration
+  bool loading = false;
 
   @override
   void dispose() {
     emailController.dispose();
     passwordController.dispose();
+    usernameController.dispose();
+    regPasswordController.dispose();
     super.dispose();
   }
 
@@ -121,17 +131,72 @@ class _LoginFormState extends State<_LoginForm> {
       case RoleIds.departmentUser:
       case RoleIds.additionalCeo:
       case RoleIds.publicUser:
-        page = const EkatmikBalvikasYojnaDashboardPage();
+        page = const PublicDashboardPage();
         break;
       default:
         page = const LoginPage();
     }
 
-
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => page),
           (route) => false,
     );
+  }
+
+  Future<void> _registerPublic() async {
+    final username = usernameController.text.trim();
+    final password = regPasswordController.text.trim();
+
+    if (username.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please enter username and password")),
+      );
+      return;
+    }
+
+    setState(() => loading = true);
+
+    try {
+      final response = await Dio().post(
+        'https://rdprgovapi.atyoureye.com/api/Auth/public/register',
+        data: {
+          "username": username,
+          "password": password,
+        },
+        options: Options(headers: {'accept': 'text/plain'}),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final userId = response.data['userId'];
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Registered successfully! User ID: $userId")),
+        );
+
+        // Automatically login the registered user
+        final authProvider = context.read<AuthProvider>();
+        final success = await authProvider.login(username, password);
+
+        if (!mounted) return;
+
+        if (success) {
+          _navigateByRole(authProvider.roleId); // Navigate to PublicDashboardPage
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Auto-login failed. Please try logging in.")),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Registration failed")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    } finally {
+      setState(() => loading = false);
+    }
   }
 
   @override
@@ -142,86 +207,93 @@ class _LoginFormState extends State<_LoginForm> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // 🔹 Language Dropdown
-            Align(
-              alignment: Alignment.topRight,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 20),
-                child: DropdownButton<Locale>(
-                  value: context.locale,
-                  underline: const SizedBox(),
-                  icon: const Icon(Icons.language, color: Colors.white),
-                  dropdownColor: Colors.black87,
-                  items: const [
-                    DropdownMenuItem(value: Locale('en'), child: Text('English', style: TextStyle(color: Colors.white))),
-                    DropdownMenuItem(value: Locale('mr'), child: Text('मराठी', style: TextStyle(color: Colors.white))),
-                  ],
-                  onChanged: (locale) {
-                    if (locale != null) context.setLocale(locale);
+            // Toggle Tabs
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                GestureDetector(
+                  onTap: () => setState(() => isRegisterMode = false),
+                  child: Text(
+                    "Login",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: isRegisterMode ? Colors.white70 : Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 20),
+                GestureDetector(
+                  onTap: () => setState(() => isRegisterMode = true),
+                  child: Text(
+                    "Public Registration",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: isRegisterMode ? Colors.white : Colors.white70,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            if (isRegisterMode) ...[
+              _buildTextField(hint: "Username", icon: Icons.person, controller: usernameController),
+              const SizedBox(height: 16),
+              _buildTextField(hint: "Password", icon: Icons.lock_outline, controller: regPasswordController, isPassword: true),
+              const SizedBox(height: 28),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: loading ? null : _registerPublic,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.redAccent,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: loading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text("Register", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ] else ...[
+              _buildTextField(hint: 'emailMobile'.tr(), icon: Icons.email_outlined, controller: emailController),
+              const SizedBox(height: 16),
+              _buildTextField(hint: 'password'.tr(), icon: Icons.lock_outline, controller: passwordController, isPassword: true),
+              const SizedBox(height: 28),
+              SizedBox(
+                width: double.infinity,
+                child: Consumer<AuthProvider>(
+                  builder: (context, auth, _) {
+                    return ElevatedButton(
+                      onPressed: auth.loading
+                          ? null
+                          : () async {
+                        final success = await auth.login(emailController.text.trim(), passwordController.text.trim());
+                        if (!mounted) return;
+
+                        if (success) {
+                          _navigateByRole(auth.roleId);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Invalid credentials')),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.redAccent,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: auth.loading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : Text('login'.tr(), style: AppTextStyles.button(context)?.copyWith(fontWeight: FontWeight.bold, color: Colors.white)),
+                    );
                   },
                 ),
               ),
-            ),
-
-            ClipOval(
-              child: _safeImage(AppStrings.zpLogo, height: 120, width: 120, fit: BoxFit.fill),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'welcomeBack'.tr(),
-              style: AppTextStyles.headline1(context)?.copyWith(
-                fontWeight: FontWeight.bold,
-                fontSize: 26,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'panchayatDashboard'.tr(),
-              style: AppTextStyles.body(context)?.copyWith(
-                color: Colors.white70,
-                fontSize: 15,
-              ),
-            ),
-            const SizedBox(height: 28),
-
-            _buildTextField(hint: 'emailMobile'.tr(), icon: Icons.email_outlined, controller: emailController),
-            const SizedBox(height: 16),
-            _buildTextField(hint: 'password'.tr(), icon: Icons.lock_outline, controller: passwordController, isPassword: true),
-            const SizedBox(height: 28),
-
-            SizedBox(
-              width: double.infinity,
-              child: Consumer<AuthProvider>(
-                builder: (context, auth, _) {
-                  return ElevatedButton(
-                    onPressed: auth.loading
-                        ? null
-                        : () async {
-                      final success = await auth.login(emailController.text.trim(), passwordController.text.trim());
-                      if (!mounted) return;
-
-                      if (success) {
-                        _navigateByRole(auth.roleId);
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Invalid credentials')),
-                        );
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.redAccent,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: auth.loading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : Text('login'.tr(), style: AppTextStyles.button(context)?.copyWith(fontWeight: FontWeight.bold, color: Colors.white)),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 24),
+            ],
           ],
         ),
       ),

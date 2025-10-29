@@ -1,8 +1,8 @@
-// repository/uploaded_file_repository.dart
+import 'dart:io' show File, Platform;
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kIsWeb, Uint8List;
 import '../../../../core/network/dio_client.dart';
 import '../models/uploaded_file_list_model.dart';
-
 
 class UploadedFileRepository {
   final DioClient dioClient;
@@ -34,12 +34,26 @@ class UploadedFileRepository {
 
       final data = response.data as List;
       return data.map((e) => UploadedFile.fromJson(e)).toList();
-    } catch (e) {
-      if (e is DioError) {
-        throw Exception(e.response?.data ?? e.message);
-      } else {
-        throw Exception(e.toString());
-      }
+    } on DioException catch (e) {
+      throw Exception(e.response?.data ?? e.message);
+    }
+  }
+
+  Future<Uint8List> downloadFileBytes({
+    required String fileId,
+    required String token,
+  }) async {
+    try {
+      final response = await dioClient.dio.get(
+        '/files/$fileId/download',
+        options: Options(
+          headers: {'Authorization': 'Bearer $token'},
+          responseType: ResponseType.bytes,
+        ),
+      );
+      return Uint8List.fromList(response.data);
+    } on DioException catch (e) {
+      throw Exception("Download failed: ${e.response?.data ?? e.message}");
     }
   }
 }

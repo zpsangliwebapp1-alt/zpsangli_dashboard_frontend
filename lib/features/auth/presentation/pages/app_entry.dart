@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
-
 import 'package:provider/provider.dart';
-import 'package:zp_sangali_dashboard_flutter/features/all_roles/additional_Ceo_dashboard/presentation/additional_dashboard_page.dart';
 
-import '../../../../core/constants/role_ids.dart';
-import '../../../../core/di/injection.dart' as di;
+// 📦 Dashboards
+import 'package:zp_sangali_dashboard_flutter/features/all_roles/additional_Ceo_dashboard/presentation/additional_dashboard_page.dart';
 import '../../../all_roles/BDO_dashboard/presentation/bdo_dashboard_page.dart';
 import '../../../all_roles/CEO_dashboard/presentation/ceo_dashboard_page.dart';
+import '../../../all_roles/department_User_dashboard/presentation/bdo_dashboard_screen.dart';
+import '../../../all_roles/department_dashboard/presentation/bdo_dashboard_screen.dart';
 import '../../../all_roles/ekatmik_balvikas_yojna_dashboard/presentation/ekatmik_balvikas_yojna_dashboard_page.dart';
 import '../../../all_roles/public_dashboard/presentation/public_dashboard_page.dart';
-import '../../provider/auth_provider.dart';
 
+// 📦 Core + Auth
+import '../../../../core/constants/role_ids.dart';
+import '../../provider/auth_provider.dart';
 import 'login_page.dart';
 
 class AppEntry extends StatefulWidget {
@@ -26,42 +28,45 @@ class _AppEntryState extends State<AppEntry> {
   @override
   void initState() {
     super.initState();
-    initAuth();
+    Future.microtask(initAuth); // ✅ avoid build-blocking
   }
 
   Future<void> initAuth() async {
     final authProv = context.read<AuthProvider>();
     await authProv.tryAutoLogin();
-    if (mounted) setState(() => _checking = false);
+    if (!mounted) return;
+    setState(() => _checking = false);
   }
 
-  @override
-  Widget build(BuildContext context) {
-    if (_checking) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
+  // 🔹 Define role-based routes in one map
+  final Map<int, Widget> roleRoutes = {
+    RoleIds.ceo: const CeoDashboardPage(),
+    RoleIds.bdo: const BdoHomeLayout(),
+    RoleIds.department: const DepartmentDashboardScreen(),
+    RoleIds.departmentUser: const DepartmentUserDashboardScreen(),
+    RoleIds.additionalCeo: const CeoDashboardPage(),
+    RoleIds.publicUser: const PublicDashboardPage(),
+  };
 
-    final authProv = context.watch<AuthProvider>();
-
+  /// ✅ Returns dashboard based on roleId using map-based lookup
+  Widget _buildPageForRole(AuthProvider authProv) {
     if (!authProv.isAuthenticated) {
       return const LoginPage();
     }
 
-    // 🔹 Navigate by role if authenticated
-    switch (authProv.roleId) {
-      case RoleIds.ceo:
-        return const CeoDashboardPage();
-      case RoleIds.bdo:
-        return const BdoHomeLayout();
-      case RoleIds.department:
-      case RoleIds.departmentUser:
-      case RoleIds.additionalCeo:
-      return const AdditionalCeoHomeLayout();
-      case RoleIds.publicUser:
-        return const PublicDashboardPage();
-      default:
-        return const LoginPage();
-    }
+    return roleRoutes[authProv.roleId] ?? const LoginPage();
   }
 
+  @override
+  Widget build(BuildContext context) {
+    // 🌀 Show loader while checking auth state
+    if (_checking) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final authProv = context.watch<AuthProvider>();
+    return _buildPageForRole(authProv);
+  }
 }

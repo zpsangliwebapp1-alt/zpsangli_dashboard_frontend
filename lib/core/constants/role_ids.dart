@@ -6,3 +6,4 @@ class RoleIds {
   static const int additionalCeo = 5;
   static const int publicUser = 6;
 }
+

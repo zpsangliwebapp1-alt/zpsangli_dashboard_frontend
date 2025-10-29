@@ -87,30 +87,23 @@ class CeoSidebar extends StatelessWidget {
                   fontSize: navFontSize,
                 ),
                 _buildNavItem(
-                  icon: Icons.person_add_outlined, // Changed
-                  label: "createAccount".tr(),     // Changed
+                  icon: Icons.apartment_outlined,
+                  label: "fileupload".tr(),
                   index: 1,
                   context: context,
                   minimal: minimal,
                   fontSize: navFontSize,
                 ),
+
                 _buildNavItem(
                   icon: Icons.account_tree_outlined,
-                  label: "departments".tr(),
+                  label: "announcements".tr(),
                   index: 2,
                   context: context,
                   minimal: minimal,
                   fontSize: navFontSize,
                 ),
                 _buildNavItem(
-                  icon: Icons.apartment_outlined,
-                  label: "panchayatSamiti".tr(),
-                  index: 3,
-                  context: context,
-                  minimal: minimal,
-                  fontSize: navFontSize,
-                ),
-                _buildNavItem(
                   icon: Icons.person_add_outlined, // Changed
                   label: "createAccount".tr(),     // Changed
                   index: 3,
@@ -119,16 +112,17 @@ class CeoSidebar extends StatelessWidget {
                   fontSize: navFontSize,
                 ),
                 _buildNavItem(
-                  icon: Icons.bar_chart_outlined,
-                  label: "reports".tr(),
+                  icon: Icons.person_add_outlined, // Changed
+                  label: "Complaint".tr(),     // Changed
                   index: 4,
                   context: context,
                   minimal: minimal,
                   fontSize: navFontSize,
                 ),
+
                 _buildNavItem(
-                  icon: Icons.account_balance_wallet_outlined,
-                  label: "finance".tr(),
+                  icon: Icons.notifications_outlined,
+                  label: "Schemes".tr(),
                   index: 5,
                   context: context,
                   minimal: minimal,
@@ -142,22 +136,7 @@ class CeoSidebar extends StatelessWidget {
                   minimal: minimal,
                   fontSize: navFontSize,
                 ),
-                _buildNavItem(
-                  icon: Icons.meeting_room_outlined,
-                  label: "meetings".tr(),
-                  index: 7,
-                  context: context,
-                  minimal: minimal,
-                  fontSize: navFontSize,
-                ),
-                _buildNavItem(
-                  icon: Icons.event_outlined,
-                  label: "events".tr(),
-                  index: 8,
-                  context: context,
-                  minimal: minimal,
-                  fontSize: navFontSize,
-                ),
+
                 if (!minimal) ...[
                   const SizedBox(height: 12),
                   _UrgentAlertBox(

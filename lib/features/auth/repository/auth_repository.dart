@@ -6,10 +6,9 @@ class AuthRepository {
 
   AuthRepository(this.dioClient);
 
-  /// 🔹 Login API
   Future<Map<String, dynamic>> login(String username, String password) async {
     try {
-      final response = await dioClient.dio.post(
+      final response = await dioClient.post(
         '/auth/login',
         data: {
           "username": username,
@@ -22,20 +21,25 @@ class AuthRepository {
     }
   }
 
-  /// 🔹 Refresh Token API
   Future<Map<String, dynamic>> refreshToken(String refreshToken) async {
     try {
-      final response = await dioClient.dio.post(
+      final response = await dioClient.post(
         '/auth/refresh',
-        data: {
-          "refreshToken": refreshToken,
-        },
+        data: {"refreshToken": refreshToken},
       );
       return response.data as Map<String, dynamic>;
     } on DioError catch (e) {
-      throw Exception(
-        e.response?.data['message'] ?? 'Refresh token failed',
-      );
+      throw Exception(e.response?.data['message'] ?? 'Refresh token failed');
+    }
+  }
+
+  Future<String?> getUsernameById(int userId) async {
+    try {
+      final response = await dioClient.get('/users/$userId'); // ✅ depends on your API path
+      final data = response.data;
+      return data['username'] ?? data['name'] ?? null;
+    } catch (e) {
+      return null;
     }
   }
 }

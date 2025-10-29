@@ -1,16 +1,16 @@
-// features/all_roles/CEO_dashboard/presentation/excel_preview_screen.dart
 import 'dart:typed_data';
-import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 import 'package:excel/excel.dart';
-import 'package:http/http.dart' as http;
+import 'package:flutter/material.dart';
+import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 
 class ExcelPreviewScreen extends StatefulWidget {
-  final String storedFileName;
+  final dynamic id; // can be String or int
   final String token;
 
   const ExcelPreviewScreen({
     super.key,
-    required this.storedFileName,
+    required this.id,
     required this.token,
   });
 
@@ -19,167 +19,147 @@ class ExcelPreviewScreen extends StatefulWidget {
 }
 
 class _ExcelPreviewScreenState extends State<ExcelPreviewScreen> {
-  List<List<dynamic>> _tableData = [];
-  bool _isLoading = true;
+  bool _loading = true;
   String? _error;
+  List<List<dynamic>> _tableData = [];
 
   @override
   void initState() {
     super.initState();
-    _downloadAndParseExcel();
+    _loadExcel();
   }
 
-  Future<void> _downloadAndParseExcel() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
+  Future<void> _loadExcel() async {
     try {
+      final dio = Dio();
       final url =
-          "https://rdprgovapi.atyoureye.com/api/files/download/${widget.storedFileName}";
-      final response = await http.get(
-        Uri.parse(url),
-        headers: {"Authorization": "Bearer ${widget.token}"},
+          "https://rdprgovapi.atyoureye.com/api/files/${widget.id}/download";
+
+      final response = await dio.get(
+        url,
+        options: Options(
+          headers: {
+            "Authorization": "Bearer ${widget.token}",
+            "Accept": "*/*",
+          },
+          responseType: ResponseType.bytes,
+        ),
       );
 
-      if (response.statusCode != 200) {
-        throw Exception("Failed to download file");
-      }
-
-      final Uint8List bytes = response.bodyBytes;
+      final bytes = Uint8List.fromList(response.data);
       final excel = Excel.decodeBytes(bytes);
 
-      List<List<dynamic>> rows = [];
-      for (var table in excel.tables.keys) {
-        for (var row in excel.tables[table]!.rows) {
-          rows.add(row.map((cell) => cell?.value ?? "").toList());
-        }
-      }
+      final firstSheet = excel.tables.keys.first;
+      final table = excel.tables[firstSheet];
 
       setState(() {
-        _tableData = rows;
+        _tableData = table?.rows ?? [];
+        _loading = false;
       });
     } catch (e) {
       setState(() {
-        _error = e.toString();
-      });
-    } finally {
-      setState(() {
-        _isLoading = false;
+        _error = "Failed to load Excel: $e";
+        _loading = false;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return  Scaffold(
-        appBar: AppBar(title: Text("Preview Excel")),
+    if (_loading) {
+      return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
     if (_error != null) {
       return Scaffold(
-        appBar: AppBar(title: const Text("Preview Excel")),
+        appBar: AppBar(title: const Text("Excel Preview")),
         body: Center(
-          child: Text(
-            "Error: $_error",
-            style: const TextStyle(color: Colors.red),
-          ),
+          child: Text(_error!, style: const TextStyle(color: Colors.red)),
         ),
       );
     }
 
     if (_tableData.isEmpty) {
-      return Scaffold(
-        appBar: AppBar(title: const Text("Preview Excel")),
-        body: const Center(
-          child: Text("No data found in this Excel file."),
-        ),
+      return const Scaffold(
+        body: Center(child: Text("No data found in Excel file.")),
       );
     }
 
-    final headers = _tableData.first;
-    final rows = _tableData.skip(1).toList();
+    final dataSource = ExcelDataSource(_tableData);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("Preview: ${widget.storedFileName}"),
+        title: const Text("Excel Preview"),
+        actions: [
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadExcel),
+        ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        scrollDirection: Axis.horizontal,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(minWidth: MediaQuery.of(context).size.width),
-          child: PaginatedDataTable(
-            header: Text(
-              "Excel Preview",
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
+      body: SfDataGrid(
+        source: dataSource,
+        frozenColumnsCount: 1,
+        allowSorting: true,
+        allowFiltering: true,
+        gridLinesVisibility: GridLinesVisibility.both,
+        headerGridLinesVisibility: GridLinesVisibility.both,
+        columnWidthMode: ColumnWidthMode.auto,
+        columns: _tableData.first.map((header) {
+          final title = header?.toString() ?? '';
+          return GridColumn(
+            columnName: title,
+            label: Container(
+              alignment: Alignment.centerLeft,
+              color: Colors.grey.shade200,
+              padding: const EdgeInsets.all(8),
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-            rowsPerPage: 10,
-            columnSpacing: 20,
-            horizontalMargin: 10,
-            showCheckboxColumn: false,
-            columns: headers
-                .map(
-                  (h) => DataColumn(
-                label: Text(
-                  h.toString(),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                    color: Colors.indigo,
-                  ),
-                ),
-              ),
-            )
-                .toList(),
-            source: _ExcelDataSource(rows),
-            headingRowHeight: 56,
-            dataRowHeight: 48,
-            dividerThickness: 1,
-          ),
-        ),
+          );
+        }).toList(),
       ),
     );
   }
 }
 
-class _ExcelDataSource extends DataTableSource {
-  final List<List<dynamic>> rows;
-  _ExcelDataSource(this.rows);
+class ExcelDataSource extends DataGridSource {
+  final List<List<dynamic>> tableData;
+  late List<DataGridRow> _rows;
 
-  @override
-  DataRow? getRow(int index) {
-    if (index >= rows.length) return null;
-    final row = rows[index];
-    return DataRow.byIndex(
-      index: index,
-      cells: row
-          .map(
-            (cell) => DataCell(
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 200),
-            child: Text(
-              cell.toString(),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ),
-      )
-          .toList(),
-    );
+  ExcelDataSource(this.tableData) {
+    final headers = tableData.first.map((e) => e?.toString() ?? '').toList();
+
+    _rows = tableData.skip(1).map((row) {
+      final cells = <DataGridCell>[];
+      for (int i = 0; i < headers.length; i++) {
+        cells.add(DataGridCell<String>(
+          columnName: headers[i],
+          value: i < row.length ? row[i]?.toString() ?? '' : '',
+        ));
+      }
+      return DataGridRow(cells: cells);
+    }).toList();
   }
 
   @override
-  bool get isRowCountApproximate => false;
+  List<DataGridRow> get rows => _rows;
+
   @override
-  int get rowCount => rows.length;
-  @override
-  int get selectedRowCount => 0;
+  DataGridRowAdapter buildRow(DataGridRow row) {
+    return DataGridRowAdapter(
+      cells: row.getCells().map((cell) {
+        return Container(
+          padding: const EdgeInsets.all(8),
+          alignment: Alignment.centerLeft,
+          child: Text(cell.value.toString()),
+        );
+      }).toList(),
+    );
+  }
 }

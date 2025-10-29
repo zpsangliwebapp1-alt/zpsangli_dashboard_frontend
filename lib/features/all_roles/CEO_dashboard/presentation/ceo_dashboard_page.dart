@@ -1,14 +1,26 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:zp_sangali_dashboard_flutter/features/all_roles/BDO_dashboard/presentation/schemes_screen.dart';
+import 'package:zp_sangali_dashboard_flutter/features/all_roles/CEO_dashboard/presentation/complaint_form_screen.dart';
+import 'package:zp_sangali_dashboard_flutter/features/all_roles/CEO_dashboard/presentation/notification_ceo.dart';
+import 'package:zp_sangali_dashboard_flutter/features/all_roles/CEO_dashboard/presentation/scheme_form_screen.dart';
 import 'package:zp_sangali_dashboard_flutter/features/all_roles/CEO_dashboard/presentation/uploaded_file_list_screen.dart';
 import 'package:zp_sangali_dashboard_flutter/features/all_roles/CEO_dashboard/widgets/ceoSidebar.dart';
 import 'package:zp_sangali_dashboard_flutter/features/all_roles/CEO_dashboard/widgets/excel_upload_button.dart';
+import 'package:zp_sangali_dashboard_flutter/features/all_roles/additional_Ceo_dashboard/presentation/additional_ceo_screen.dart';
+import '../../../../core/constants/app_strings.dart';
+import '../../../../core/network/dio_client.dart';
 import '../../../../core/widgets/dashboard_content.dart';
+import '../../../auth/presentation/pages/registration_screen.dart';
+import '../../ceo_dashboard/controller/ceo_dashboard_controller.dart';
+import '../../ceo_dashboard/presentation/create_user.dart';
 import '../../ceo_dashboard/widgets/ceo_topbar.dart';
+import '../provider/create_bdo_provider.dart';
+import '../repository/create_bdo_repository.dart';
 import 'broadcast_screen.dart';
 import 'ceo_dashboard_content.dart';
-import 'create_user.dart';
-
+import 'complaint_list_screen.dart';
 /// Top-level dashboard scaffold (entry point)
 class CeoDashboardPage extends StatefulWidget {
   const CeoDashboardPage({super.key});
@@ -21,6 +33,16 @@ class _CeoDashboardPageState extends State<CeoDashboardPage> {
   int _selectedIndex = 0;
 
   void _onItemSelected(int index) => setState(() => _selectedIndex = index);
+
+  // @override
+  // void initState() {
+  //   super.initState();
+  //
+  //   WidgetsBinding.instance.addPostFrameCallback((_) {
+  //     context.read<CeoDashboardController>().init();
+  //     });
+  // }
+
 
   @override
   Widget build(BuildContext context) {
@@ -54,23 +76,28 @@ class _CeoDashboardPageState extends State<CeoDashboardPage> {
       ),
     );
   }
-
   Widget _getSelectedContent() {
     switch (_selectedIndex) {
       case 0:
         return CeoDashboardContent();
       case 1:
-        return  CreateAccountScreen();
-      case 2:
-        return const BroadcastScreen();
-      // case 2:
-      //   return const UploadedFileListScreen();
-      case 3:
         return const UploadedFileListScreen();
+      case 2:
+        return const AnnouncementDashboardScreen();
+      case 3:
+        return  CreateAccountScreen();
+      case 4:
+        return ComplaintScreen();
+      case 5:
+        return SchemeFormScreen();
+      case 6:
+        return NotificationScreen();
       default:
-        return Center(child: const ExcelUploadButton());
+        return const Center(child: ExcelUploadButton());
     }
   }
+
+
 }
 
 
@@ -179,3 +206,5 @@ class CeoDashboardMobileDashboard extends StatelessWidget {
     );
   }
 }
+
+

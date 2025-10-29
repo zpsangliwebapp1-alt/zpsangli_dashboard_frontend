@@ -6,6 +6,7 @@ import '../../../../core/widgets/breakpoint.dart';
 import '../../../../core/widgets/dashboard_content.dart';
 import '../../../../core/widgets/sidebar.dart';
 import '../../../../core/widgets/topbar.dart';
+import '../../CEO_dashboard/widgets/ceo_topbar.dart';
 import '../widgets/public_dashboard_content.dart';
 import '../widgets/public_sidebar.dart';
 import '../widgets/public_topbar.dart';
@@ -73,7 +74,7 @@ class _PublicDesktopDashboardState
             Expanded(
               child: Column(
                 children: [
-                  const PublicTopBar(),
+                  const CeoTopBar(),
                   Expanded(
                     child: PublicDashboardContent(),
                   ),
@@ -126,7 +127,7 @@ class _PublicTabletDashboardState
       body: SafeArea(
         child: Column(
           children: [
-            const PublicTopBar(),
+            const CeoTopBar(),
             Expanded(
               child: Row(
                 children: [

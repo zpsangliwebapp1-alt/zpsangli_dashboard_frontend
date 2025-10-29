@@ -60,7 +60,7 @@ class AppLocalizationsMr extends AppLocalizations {
   String get users => 'वापरकर्ते';
 
   @override
-  String get departments => 'विभाग';
+  String get announcements => 'CEO सूचना';
 
   @override
   String get attendance => 'हजेरी';

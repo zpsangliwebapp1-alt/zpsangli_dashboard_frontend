@@ -197,11 +197,11 @@ abstract class AppLocalizations {
   /// **'Users'**
   String get users;
 
-  /// No description provided for @departments.
+  /// No description provided for @announcements.
   ///
   /// In en, this message translates to:
-  /// **'Departments'**
-  String get departments;
+  /// **'Announcements'**
+  String get announcements;
 
   /// No description provided for @attendance.
   ///

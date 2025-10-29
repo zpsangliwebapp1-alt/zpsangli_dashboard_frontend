@@ -6,6 +6,7 @@ import '../../../../core/widgets/breakpoint.dart';
 import '../../../../core/widgets/dashboard_content.dart';
 import '../../../../core/widgets/sidebar.dart';
 import '../../../../core/widgets/topbar.dart';
+import '../../CEO_dashboard/widgets/ceo_topbar.dart';
 import '../widgets/ekatmik_balvikas_dashboard_content.dart';
 import '../widgets/topbar.dart';
 
@@ -72,7 +73,7 @@ class _EkatmikBalvikasYojnaDesktopDashboardState
             Expanded(
               child: Column(
                 children: [
-                  const EkatmikYojnaTopBar(),
+                  const CeoTopBar(),
                   Expanded(
                     child: _buildContent(selectedMenu),
                   ),
@@ -125,7 +126,7 @@ class _EkatmikBalvikasYojnaTabletDashboardState
       body: SafeArea(
         child: Column(
           children: [
-            const EkatmikYojnaTopBar(),
+            const CeoTopBar(),
             Expanded(
               child: Row(
                 children: [

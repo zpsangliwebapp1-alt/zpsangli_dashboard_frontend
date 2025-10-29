@@ -7,8 +7,10 @@ import 'package:zp_sangali_dashboard_flutter/core/widgets/visitor_insights_chart
 
 
 import '../../features/all_roles/BDO_dashboard/widgets/stat_card.dart';
+import '../../features/all_roles/CEO_dashboard/presentation/ceo_dashboard_content.dart';
 import '../../features/all_roles/ekatmik_balvikas_yojna_dashboard/widgets/ekatmikBalvikastTopYojnaList.dart';
 import '../../main.dart';
+import '../constants/broadcast_carosal.dart';
 import 'customer_satisfaction_chart.dart';
 import 'info_card.dart';
 
@@ -22,8 +24,21 @@ class DashboardContent extends StatelessWidget {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
           // Row 1: Today's Sales (big) + Visitor Insights (chart)
+
+          Text(
+            "Latest Announcements",
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height:18),
+          /// 📊 Row 1: Info Cards - Responsive Layout
+          ///      /// --- 📸 Carousel Section ---
+          BroadcastFeed(),
+          SizedBox(height:22),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

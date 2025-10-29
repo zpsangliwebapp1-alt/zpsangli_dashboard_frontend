@@ -60,7 +60,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get users => 'Users';
 
   @override
-  String get departments => 'Departments';
+  String get announcements => 'Announcements';
 
   @override
   String get attendance => 'Attendance';

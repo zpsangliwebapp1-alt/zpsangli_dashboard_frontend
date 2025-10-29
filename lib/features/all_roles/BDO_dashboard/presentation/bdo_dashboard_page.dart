@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:zp_sangali_dashboard_flutter/features/all_roles/CEO_dashboard/presentation/uploaded_file_list_screen.dart';
 import '../../../../core/widgets/dashboard_content.dart';
 import '../../../../core/widgets/sidebar.dart';
 import '../widgets/bdo_topbar.dart'; // import your topbar
@@ -26,7 +27,7 @@ class _BdoHomeLayoutState extends State<BdoHomeLayout> {
   Widget _getScreen() {
     switch (_activeRoute) {
       case 'schemes':
-        return const SchemesScreen();
+        return const UploadedFileListScreen();
       case 'progress':
         return const ProgressReportsScreen();
       case 'departments':
@@ -68,6 +69,7 @@ class _BdoHomeLayoutState extends State<BdoHomeLayout> {
                 // 🔹 Main screen content
                 Expanded(
                   child: Container(
+
                     color: const Color(0xFFF8F9FB),
                     padding: const EdgeInsets.all(20),
                     child: _getScreen(),

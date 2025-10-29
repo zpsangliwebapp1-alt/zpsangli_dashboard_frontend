@@ -8,7 +8,7 @@ class SchemesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SectionPage(
-      title: "Government Schemes",
+      title: "aGovernment Schemes",
       icon: Icons.account_tree_rounded,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

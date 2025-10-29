@@ -27,6 +27,7 @@ class _SplashScreenState extends State<SplashScreen> {
         _controller.play();
       });
 
+
     Timer(const Duration(milliseconds: 2400), () {
       setState(() => _fadeOut = true);
     });

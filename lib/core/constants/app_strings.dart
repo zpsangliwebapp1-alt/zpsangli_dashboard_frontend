@@ -1,5 +1,18 @@
+
+class AppConstants {
+  static const String baseUrl = 'https://rdprgovapi.atyoureye.com/api';
+  static const String additionalCeoEndpoint = '/Admin/additional-ceos';
+  static const imageBaseUrl = "$baseUrl/uploads"; // adjust if needed
+
+}
+
+
+
+
 class AppStrings {
   static const appName = 'Giants Welfare';
+
+
 
   // Auth
   static const loginTitle = 'Login';

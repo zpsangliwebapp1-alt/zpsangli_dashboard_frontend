@@ -4,20 +4,26 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../auth/provider/auth_provider.dart';
 import '../../../departments/providers/department_provider.dart';
 import '../models/json_data_model.dart';
 import '../../../../core/utils/json_parser.dart';
 import '../models/zp_work_progress_model.dart';
+import '../provider/create_bdo_provider.dart';
 
 class CeoDashboardController extends ChangeNotifier {
   final AuthProvider authProvider;
   final DepartmentProvider departmentProvider;
+  // final CreateBdoProvider bdoProvider;
+
 
   CeoDashboardController({
     required this.authProvider,
     required this.departmentProvider,
+    // required this.bdoProvider,
+
   });
 
   /// =======================
@@ -158,6 +164,14 @@ class CeoDashboardController extends ChangeNotifier {
     return result;
   }
 
+  // List<Map<String, dynamic>> blocks = [
+  // {'id': 0, 'name': 'All Blocks'},
+  // {'id': 1, 'name': 'Miraj'},
+  // {'id': 2, 'name': 'Kavathe Mahankal'},
+  // {'id': 3, 'name': 'Tasgaon'},
+  // {'id': 4, 'name': 'Jat'},
+  // {'id': 5, 'name': 'Walwa'},
+  // ];
 
   List<Map<String, dynamic>> blocks = [];
   List<ApiItem> items = [];
@@ -180,11 +194,75 @@ class CeoDashboardController extends ChangeNotifier {
   /// =======================
   /// INIT LOGIC
   /// =======================
+  bool isInitialized = false;
   Future<void> init() async {
-    selectedMonth = apiMonths.last;
-    selectedYear = apiYears.last;
-    await _loadDepartments();
+    if (isInitialized) return;
+    isInitialized = true;
+
+    await Future.wait([
+      loadSavedFilters(), // ⬅️ load saved filters first
+      _loadDepartments(),
+      loadBlocks(),
+    ]);
+
+    // If nothing saved, set defaults (Dept 1, Block 1, Month Jan, latest Year)
+    if (selectedDepartment.isEmpty && departmentProvider.departments.isNotEmpty) {
+      selectedDepartment = departmentProvider.departments.first.name;
+    }
+    if (selectedBlock.isEmpty && blocks.isNotEmpty) {
+      selectedBlock = blocks.first["name"].toString();
+    }
+    if (selectedMonth.isEmpty) {
+      selectedMonth = "1"; // January
+    }
+    if (selectedYear.isEmpty) {
+      selectedYear = DateTime.now().year.toString();
+    }
+
+    await loadDashboardData();
+    notifyListeners();
   }
+
+
+  // =======================
+// 🔹 Save filters locally
+// =======================
+  Future<void> saveSelectedFilters() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('selectedDepartment', selectedDepartment);
+    await prefs.setString('selectedBlock', selectedBlock);
+    await prefs.setString('selectedMonth', selectedMonth);
+    await prefs.setString('selectedYear', selectedYear);
+    debugPrint("💾 Saved filters → Dept: $selectedDepartment, Block: $selectedBlock, Month: $selectedMonth, Year: $selectedYear");
+  }
+
+// =======================
+// 🔹 Load saved filters
+// =======================
+  Future<void> loadSavedFilters() async {
+    final prefs = await SharedPreferences.getInstance();
+    selectedDepartment = prefs.getString('selectedDepartment') ?? '';
+    selectedBlock = prefs.getString('selectedBlock') ?? 'All Blocks';
+    selectedMonth = prefs.getString('selectedMonth') ?? '';
+    selectedYear = prefs.getString('selectedYear') ?? '';
+    debugPrint("📦 Loaded filters → Dept: $selectedDepartment, Block: $selectedBlock, Month: $selectedMonth, Year: $selectedYear");
+  }
+
+
+
+
+
+
+
+  // Future<void> init() async {
+  //   if (isInitialized) return;
+  //   isInitialized = true;
+  //   await _loadDepartments();
+  //   await loadBlocks();
+  //   await loadDashboardData();
+  //   notifyListeners();
+  //
+  // }
 
   Future<void> _loadDepartments() async {
     // 🔸 Refresh token if needed
@@ -197,20 +275,49 @@ class CeoDashboardController extends ChangeNotifier {
 
     if (departmentProvider.departments.isNotEmpty) {
       selectedDepartment = departmentProvider.departments.first.name;
-      await loadBlocks();
-      await loadDashboardData();
+      // await loadBlocks();
+      // await loadDashboardData();
     }
   }
 
   /// =======================
   /// LOAD BLOCKS
   /// =======================
+  ///
+  bool _blocksLoaded = false;
+
   Future<void> loadBlocks() async {
+    // ✅ Stop if blocks already loaded once
+    if (_blocksLoaded && blocks.isNotEmpty) {
+      debugPrint("🟢 Blocks already loaded — skipping API call");
+      return;
+    }
     _setLoading(true);
-    final token = authProvider.token ?? '';
-    const url = 'https://rdprgovapi.atyoureye.com/api/Org/bdos';
 
     try {
+      // 🔹 Step 1: Ensure token is valid before calling API
+      if (authProvider.token == null || authProvider.token!.isEmpty) {
+        debugPrint("⚠️ No token found — attempting refresh...");
+        final refreshed = await authProvider.refreshTokenIfNeeded();
+        if (!refreshed) {
+          debugPrint("❌ Token refresh failed — cannot fetch blocks");
+          _setLoading(false);
+          return;
+        }
+      }
+
+      final token = authProvider.token ?? '';
+      final parentCeoId = authProvider.userId ?? 2;
+
+      debugPrint('🔑 TOKEN: $token');
+      debugPrint('👤 USER ID: $parentCeoId');
+
+      final url =
+          'https://rdprgovapi.atyoureye.com/api/Org/bdos?parent_ceo_id=$parentCeoId';
+
+      debugPrint('📡 Fetching blocks for CEO ID: $parentCeoId');
+
+      // 🔹 Step 2: Make API call safely
       final response = await http.get(
         Uri.parse(url),
         headers: {
@@ -219,17 +326,55 @@ class CeoDashboardController extends ChangeNotifier {
         },
       );
 
-      if (response.statusCode == 200) {
-        final data = await compute(_parseBlocks, response.body);
-        blocks = [{'id': 0, 'name': 'All Blocks'}, ...data];
-        selectedBlock = 'All Blocks';
+      debugPrint('📨 STATUS: ${response.statusCode}');
+      debugPrint('📥 BODY: ${response.body}');
+
+      // 🔹 Step 3: Handle 401 unauthorized (token expired)
+      if (response.statusCode == 401) {
+        debugPrint("⚠️ Token expired — refreshing...");
+        final refreshed = await authProvider.refreshTokenIfNeeded();
+        if (refreshed) {
+          // 🔁 retry once
+          return await loadBlocks();
+        } else {
+          debugPrint("❌ Token refresh failed on retry");
+          _setLoading(false);
+          return;
+        }
       }
-    } catch (e) {
-      debugPrint('❌ Error loading blocks: $e');
+
+      // 🔹 Step 4: Handle success
+      if (response.statusCode == 200) {
+        final decoded = json.decode(response.body);
+        final List<dynamic> data = decoded is List ? decoded : decoded['data'] ?? [];
+
+        if (data.isNotEmpty) {
+          blocks = [
+            {'id': 0, 'name': 'All Blocks'},
+            ...data.map((e) => {
+              'id': e['id'] ?? 0,
+              'name': e['name']?.toString() ?? 'Unnamed Block',
+            }),
+          ];
+          debugPrint('✅ Loaded ${blocks.length} blocks');
+        } else {
+          debugPrint('⚠️ No blocks found for CEO ID: $parentCeoId');
+          blocks = [{'id': 0, 'name': 'All Blocks'}];
+        }
+      } else {
+        debugPrint('❌ Failed to load blocks: ${response.body}');
+        blocks = [{'id': 0, 'name': 'All Blocks'}];
+      }
+    } catch (e, st) {
+      debugPrint('❌ Exception while loading blocks: $e\n$st');
+      blocks = [{'id': 0, 'name': 'All Blocks'}];
     } finally {
       _setLoading(false);
+      notifyListeners();
     }
   }
+
+
 
   static List<Map<String, dynamic>> _parseBlocks(String responseBody) {
     final List<dynamic> data = json.decode(responseBody);
@@ -237,6 +382,7 @@ class CeoDashboardController extends ChangeNotifier {
         .map((e) => {'id': e['id'], 'name': e['name']?.toString() ?? ''})
         .toList();
   }
+
 
   /// =======================
   /// LOAD DASHBOARD DATA
@@ -260,7 +406,7 @@ class CeoDashboardController extends ChangeNotifier {
             '?month=$month&year=$year'
             '&departmentId=$departmentId'
             '&bdoId=$blockId'
-            '&uploadedByUserId=1'
+            '&uploadedByUserId=2'
             '&page=1&pageSize=1',
       );
 
@@ -417,23 +563,27 @@ class CeoDashboardController extends ChangeNotifier {
 
   Future<void> updateDepartment(String dept) async {
     selectedDepartment = dept;
+    await saveSelectedFilters();
     _debouncedLoad(loadDashboardData);
   }
 
   Future<void> updateBlock(String block) async {
     selectedBlock = block;
+    await saveSelectedFilters();
     _debouncedLoad(() async => await _computeMetrics());
   }
 
   Future<void> updateMonth(String month) async {
     selectedMonth = month;
+    await saveSelectedFilters();
     _debouncedLoad(loadDashboardData);
   }
 
   Future<void> updateYear(String year) async {
     selectedYear = year;
+    await saveSelectedFilters();
     _debouncedLoad(loadDashboardData);
-  }
+  } 
 
   Future<void> updateDepartments() async {
     _debouncedLoad(loadDashboardDataForMultipleDepartments);
@@ -447,9 +597,12 @@ class CeoDashboardController extends ChangeNotifier {
   /// UTILITIES
   /// =======================
   void _setLoading(bool value) {
-    _isLoading = value;
-    notifyListeners();
+    if (_isLoading != value) {
+      _isLoading = value;
+      notifyListeners();
+    }
   }
+
 
   List<ApiItem> get filteredItems {
     if (selectedBlock == 'All Blocks') return items;

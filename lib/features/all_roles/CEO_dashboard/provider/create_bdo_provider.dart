@@ -1,35 +1,39 @@
 import 'package:flutter/foundation.dart';
-import '../models/bdo_model.dart';
 import '../repository/create_bdo_repository.dart';
 
 class CreateBdoProvider extends ChangeNotifier {
-  final BdoRepository repository;
+  final CreateBdoRepository repository;
+
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
+
+  String? _errorMessage;
+  String? get errorMessage => _errorMessage;
+
+  Map<String, dynamic>? _bdoResponse;
+  Map<String, dynamic>? get bdoResponse => _bdoResponse;
 
   CreateBdoProvider({required this.repository});
 
-  bool _loading = false;
-  bool get loading => _loading;
-
-  String? _error;
-  String? get error => _error;
-
-  Bdo? _createdBdo;
-  Bdo? get createdBdo => _createdBdo;
-
-  Future<void> createBdo(String name, String token) async {
-    _loading = true;
-    _error = null;
-    _createdBdo = null;
+  Future<void> createBdo(String name, int ceoUserId) async {
+    _isLoading = true;
+    _errorMessage = null;
     notifyListeners();
 
     try {
-      final bdo = await repository.createBdo(name: name, token: token);
-      _createdBdo = bdo;
+      final data = await repository.createBdo(name: name, ceoUserId: ceoUserId);
+      _bdoResponse = data;
     } catch (e) {
-      _error = e.toString();
+      _errorMessage = e.toString();
     } finally {
-      _loading = false;
+      _isLoading = false;
       notifyListeners();
     }
+  }
+
+  void reset() {
+    _errorMessage = null;
+    _bdoResponse = null;
+    notifyListeners();
   }
 }

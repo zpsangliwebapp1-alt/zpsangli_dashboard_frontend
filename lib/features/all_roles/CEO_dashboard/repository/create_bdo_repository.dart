@@ -1,28 +1,30 @@
-import 'dart:convert';
-import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
-import '../models/bdo_model.dart';
+import 'package:dio/dio.dart';
+import '../../../../core/network/dio_client.dart';
 
-class BdoRepository {
-  final String baseUrl;
+class CreateBdoRepository {
+  final DioClient dioClient;
 
-  BdoRepository({required this.baseUrl});
+  CreateBdoRepository({required this.dioClient});
 
-  Future<Bdo> createBdo({required String name, required String token}) async {
-    final url = Uri.parse('$baseUrl/api/Org/bdos');
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-      body: jsonEncode({'name': name}),
-    );
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      return Bdo.fromJson(jsonDecode(response.body));
-    } else {
-      throw Exception('Failed to create BDO: ${response.body}');
+  Future<Map<String, dynamic>> createBdo({
+    required String name,
+    required int ceoUserId,
+  }) async {
+    try {
+      final response = await dioClient.post(
+        '/Org/bdos',
+        data: {
+          "name": name,
+          "ceoUserId": ceoUserId,
+        },
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw Exception(
+        e.response?.data['message'] ?? 'Failed to create BDO: ${e.message}',
+      );
+    } catch (e) {
+      throw Exception('Unexpected error: $e');
     }
   }
 }

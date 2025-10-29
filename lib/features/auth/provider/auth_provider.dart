@@ -16,6 +16,9 @@ class AuthProvider extends ChangeNotifier {
   int? _roleId;
   int? get roleId => _roleId;
 
+  int? _useriId;
+  int? get userId => _useriId;
+
   String? _token;
   String? _refreshToken;
   String? get token => _token;
@@ -35,6 +38,7 @@ class AuthProvider extends ChangeNotifier {
       _token = data['token'];
       _refreshToken = data['refreshToken'];
       _roleId = data['roleId'];
+      _useriId = data['userId'];
       _email = data['email'] ?? username;
 
       await _saveToStorage();
