@@ -16,8 +16,8 @@ class AuthProvider extends ChangeNotifier {
   int? _roleId;
   int? get roleId => _roleId;
 
-  int? _useriId;
-  int? get userId => _useriId;
+  int? _userId;
+  int? get userId => _userId;
 
   String? _token;
   String? _refreshToken;
@@ -25,6 +25,7 @@ class AuthProvider extends ChangeNotifier {
 
   String? _email;
   String? get email => _email;
+
 
   bool get isAuthenticated => _token != null && _token!.isNotEmpty;
 
@@ -38,7 +39,7 @@ class AuthProvider extends ChangeNotifier {
       _token = data['token'];
       _refreshToken = data['refreshToken'];
       _roleId = data['roleId'];
-      _useriId = data['userId'];
+      _userId = data['userId'];
       _email = data['email'] ?? username;
 
       await _saveToStorage();
@@ -53,13 +54,15 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  /// ---------------- AUTO LOGIN ----------------
   Future<bool> tryAutoLogin() async {
     _token = await _storage.read(key: 'token');
     _refreshToken = await _storage.read(key: 'refreshToken');
     final roleIdStr = await _storage.read(key: 'roleId');
     _roleId = roleIdStr != null ? int.tryParse(roleIdStr) : null;
     _email = await _storage.read(key: 'email');
+
+    final userIdStr = await _storage.read(key: 'userId');
+    _userId = userIdStr != null ? int.tryParse(userIdStr) : null;
 
     notifyListeners();
     return isAuthenticated;
@@ -71,6 +74,7 @@ class AuthProvider extends ChangeNotifier {
     _refreshToken = null;
     _roleId = null;
     _email = null;
+    _userId = null;
 
     await _storage.deleteAll();
     notifyListeners();
@@ -82,6 +86,7 @@ class AuthProvider extends ChangeNotifier {
     if (_refreshToken != null) await _storage.write(key: 'refreshToken', value: _refreshToken);
     if (_roleId != null) await _storage.write(key: 'roleId', value: _roleId.toString());
     if (_email != null) await _storage.write(key: 'email', value: _email);
+    if (_userId != null) await _storage.write(key: 'userId', value: _userId.toString());
   }
 
   /// ---------------- REFRESH TOKEN ----------------

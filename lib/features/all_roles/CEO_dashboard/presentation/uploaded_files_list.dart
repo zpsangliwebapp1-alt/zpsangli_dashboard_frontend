@@ -10,12 +10,13 @@ import 'package:http/http.dart' as http;
 
 import '../../../auth/provider/auth_provider.dart';
 import '../../../departments/model/departments_model.dart';
-import '../../../departments/providers/department_provider.dart';
 import '../controller/ceo_dashboard_controller.dart';
 import '../models/uploaded_file_list_model.dart';
+import '../provider/bdo_list_provider.dart';
 import '../provider/upload_file_provider.dart';
 import '../provider/uploaded_file_list_provider.dart';
 import 'excel_preview_screen.dart';
+
 class DepartmentFilesScreen extends StatefulWidget {
   final Department department;
   const DepartmentFilesScreen({super.key, required this.department});
@@ -25,13 +26,12 @@ class DepartmentFilesScreen extends StatefulWidget {
 }
 
 class _DepartmentFilesScreenState extends State<DepartmentFilesScreen> {
-  late final CeoDashboardController ceoController = context.read<CeoDashboardController>();
-  late final CeoDashboardController controller = context.read<CeoDashboardController>();
-  late final String bdoId = controller.selectedBlock ?? "1";
+  int? _selectedBdoId;
 
   Future<void> _approveFile(String fileId, String token) async {
     final url = "https://rdprgovapi.atyoureye.com/api/files/$fileId/approve";
-    final response = await http.post(Uri.parse(url), headers: {"Authorization": "Bearer $token"});
+    final response =
+    await http.post(Uri.parse(url), headers: {"Authorization": "Bearer $token"});
     if (response.statusCode != 204) {
       throw Exception("Failed to approve file (status: ${response.statusCode})");
     }
@@ -39,7 +39,8 @@ class _DepartmentFilesScreenState extends State<DepartmentFilesScreen> {
 
   Future<void> _rejectFile(String fileId, String token) async {
     final url = "https://rdprgovapi.atyoureye.com/api/files/$fileId/unapprove";
-    final response = await http.post(Uri.parse(url), headers: {"Authorization": "Bearer $token"});
+    final response =
+    await http.post(Uri.parse(url), headers: {"Authorization": "Bearer $token"});
     if (response.statusCode != 204) {
       throw Exception("Failed to reject file (status: ${response.statusCode})");
     }
@@ -48,53 +49,48 @@ class _DepartmentFilesScreenState extends State<DepartmentFilesScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final now = DateTime.now();
-      final token = context.read<AuthProvider>().token;
-      if (token != null) {
-        context.read<UploadedFileProvider>().fetchUploadedFiles(
-          departmentId: widget.department.id,
-          bdoId: 1,
-          month: now.month,
-          year: now.year,
-          uploadedByUserId: 2,
-          token: token,
-        );
+
+    // ✅ Fetch BDO list when screen loads
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final bdoProvider = context.read<BdoListProvider>();
+      await bdoProvider.fetchBdos();
+
+      // ✅ Auto-select the first BDO
+      if (bdoProvider.bdoList.isNotEmpty) {
+        setState(() {
+          _selectedBdoId = bdoProvider.bdoList.first['id'];
+        });
       }
+
+      // ✅ Then load uploaded files using selected BDO
+      _refreshFiles();
     });
   }
 
   Future<void> _refreshFiles() async {
     final now = DateTime.now();
     final auth = context.read<AuthProvider>();
-    final ctrl = context.read<CeoDashboardController>();
-
     final token = auth.token;
-    final bdoId = int.tryParse(ctrl.selectedBlock ?? '0') ?? 0;
     final uploadedBy = auth.userId ?? 0;
 
-    debugPrint('🔄 Refreshing Files for Dept: ${widget.department.id}, BDO: $bdoId, User: $uploadedBy');
-
-    if (token != null && token.isNotEmpty) {
+    if (token != null && token.isNotEmpty && _selectedBdoId != null) {
       await context.read<UploadedFileProvider>().fetchUploadedFiles(
         departmentId: widget.department.id,
-        bdoId: bdoId,
+        bdoId: _selectedBdoId!,
         month: now.month,
         year: now.year,
         uploadedByUserId: uploadedBy,
         token: token,
       );
-    } else {
-      debugPrint('⚠️ Missing Token!');
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
     final uploadProvider = context.watch<UploadFileProvider>();
     final uploadedFileProvider = context.watch<UploadedFileProvider>();
     final authProvider = context.read<AuthProvider>();
+    final bdoProvider = context.watch<BdoListProvider>();
     final now = DateTime.now();
     final currentMonth = DateFormat('MMMM yyyy').format(now);
 
@@ -103,11 +99,7 @@ class _DepartmentFilesScreenState extends State<DepartmentFilesScreen> {
         title: Text(widget.department.name),
         backgroundColor: Colors.blue.shade800,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _refreshFiles,
-            tooltip: 'Refresh list',
-          )
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _refreshFiles)
         ],
       ),
       body: RefreshIndicator(
@@ -118,6 +110,30 @@ class _DepartmentFilesScreenState extends State<DepartmentFilesScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // ✅ BDO Dropdown selector
+              if (bdoProvider.isLoading)
+                const Center(child: CircularProgressIndicator())
+              else
+                DropdownButtonFormField<int>(
+                  decoration: const InputDecoration(
+                    labelText: 'Select BDO',
+                    border: OutlineInputBorder(),
+                  ),
+                  value: _selectedBdoId,
+                  items: bdoProvider.bdoList
+                      .map((bdo) => DropdownMenuItem<int>(
+                    value: bdo['id'],
+                    child: Text(bdo['name']),
+                  ))
+                      .toList(),
+                  onChanged: (val) {
+                    setState(() => _selectedBdoId = val);
+                    _refreshFiles();
+                  },
+                ),
+
+              const SizedBox(height: 20),
+
               // Upload Card
               _buildUploadCard(
                 context,
@@ -130,60 +146,30 @@ class _DepartmentFilesScreenState extends State<DepartmentFilesScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Header for uploaded files
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Uploaded Files ($currentMonth)",
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blueAccent,
-                    ),
-                  ),
-                  // simple search/filter placeholder
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.filter_list),
-                        onPressed: () {
-                          // You can implement filter modal here
-                          showModalBottomSheet(
-                            context: context,
-                            builder: (_) => _buildFilterSheet(uploadedFileProvider),
-                          );
-                        },
-                        tooltip: 'Filter',
-                      ),
-                    ],
-                  )
-                ],
+              // File header
+              Text(
+                "Uploaded Files ($currentMonth)",
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blueAccent,
+                ),
               ),
               const SizedBox(height: 12),
 
-              // File list
+              // Uploaded Files List
               uploadedFileProvider.isLoading
-                  ? const Padding(
-                padding: EdgeInsets.symmetric(vertical: 20),
-                child: Center(child: CircularProgressIndicator()),
-              )
+                  ? const Center(child: CircularProgressIndicator())
                   : uploadedFileProvider.files.isEmpty
-                  ? const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(32.0),
-                  child: Text("No files uploaded yet"),
-                ),
-              )
+                  ? const Center(child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Text("No files uploaded yet"),
+              ))
                   : Column(
                 children: uploadedFileProvider.files.map((file) {
-                  final extension = file.originalFileName.split('.').last.toLowerCase();
+                  final ext = file.originalFileName.split('.').last.toLowerCase();
                   return _buildUploadedFileTile(
-                    file,
-                    extension,
-                    authProvider,
-                    uploadedFileProvider,
-                  );
+                      file, ext, authProvider, uploadedFileProvider);
                 }).toList(),
               ),
             ],
@@ -193,118 +179,58 @@ class _DepartmentFilesScreenState extends State<DepartmentFilesScreen> {
     );
   }
 
-  Widget _buildFilterSheet(UploadedFileProvider uploadedFileProvider) {
-    // placeholder for filter controls - can be expanded
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text('Filters', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          const SizedBox(height: 12),
-          ListTile(
-            leading: const Icon(Icons.hourglass_top),
-            title: const Text('Pending approval'),
-            onTap: () {
-              // implement filter action if provider supports
-              Navigator.pop(context);
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.check_circle_outline),
-            title: const Text('Approved'),
-            onTap: () {
-              Navigator.pop(context);
-            },
-          ),
-          const SizedBox(height: 12),
-          ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
-        ],
-      ),
-    );
-  }
-
   Widget _buildUploadedFileTile(
       UploadedFile file,
       String extension,
       AuthProvider authProvider,
-      UploadedFileProvider uploadedFileProvider,
-      ) {
+      UploadedFileProvider uploadedFileProvider) {
     final token = authProvider.token;
-    final uploadedAt = file.createdAt;
-    final formattedDate = uploadedAt != null ? DateFormat('dd MMM yyyy, hh:mm a').format(uploadedAt) : 'Unknown';
+    final formattedDate = file.createdAt != null
+        ? DateFormat('dd MMM yyyy, hh:mm a').format(file.createdAt!)
+        : 'Unknown';
 
     return Card(
-      elevation: 3,
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         leading: _fileLeadingIcon(extension),
-        title: Text(
-          file.originalFileName,
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
+        title: Text(file.originalFileName,
+            style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Text("Size: ${file.sizeBytes} bytes • Uploaded: $formattedDate"),
         trailing: Wrap(
-          spacing: 8,
           children: [
             IconButton(
               icon: const Icon(Icons.remove_red_eye),
-              tooltip: 'Preview',
               onPressed: () {
-                if (token == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("You are not logged in")));
-                  return;
-                }
-                if (extension == 'xlsx' || extension == 'xls') {
+                if (token != null) {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => ExcelPreviewScreen(token: token, id: file.id),
+                      builder: (_) =>
+                          ExcelPreviewScreen(token: token, id: file.id),
                     ),
                   );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Preview not available for .$extension files")),
-                  );
                 }
               },
             ),
-
-            // Approve
             IconButton(
               icon: const Icon(Icons.check, color: Colors.green),
-              tooltip: 'Approve',
               onPressed: () async {
                 if (token == null) return;
-                final confirmed = await _confirmDialog(context, 'Approve file', 'Are you sure you want to approve this file?');
-                if (!confirmed) return;
-                try {
-                  await _approveFile(file.id.toString(), token);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("File Approved")));
-                  await _refreshFiles();
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Approve failed: $e')));
-                }
+                await _approveFile(file.id.toString(), token);
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(const SnackBar(content: Text("File Approved")));
+                await _refreshFiles();
               },
             ),
-
-            // Reject
             IconButton(
               icon: const Icon(Icons.close, color: Colors.red),
-              tooltip: 'Reject',
               onPressed: () async {
                 if (token == null) return;
-                final confirmed = await _confirmDialog(context, 'Reject file', 'Are you sure you want to reject this file?');
-                if (!confirmed) return;
-                try {
-                  await _rejectFile(file.id.toString(), token);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("File Rejected")));
-                  await _refreshFiles();
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Reject failed: $e')));
-                }
+                await _rejectFile(file.id.toString(), token);
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(const SnackBar(content: Text("File Rejected")));
+                await _refreshFiles();
               },
             ),
           ],
@@ -313,35 +239,24 @@ class _DepartmentFilesScreenState extends State<DepartmentFilesScreen> {
     );
   }
 
-  Widget _fileLeadingIcon(String extension) {
-    // neat icon + color badge for common extensions
+  Widget _fileLeadingIcon(String ext) {
     IconData icon;
-    Color bg;
-    switch (extension) {
+    Color color;
+    switch (ext) {
       case 'xlsx':
       case 'xls':
         icon = Icons.table_chart;
-        bg = Colors.green.shade600;
+        color = Colors.green;
         break;
       case 'pdf':
         icon = Icons.picture_as_pdf;
-        bg = Colors.red.shade600;
-        break;
-      case 'doc':
-      case 'docx':
-        icon = Icons.description;
-        bg = Colors.blue.shade700;
+        color = Colors.red;
         break;
       default:
         icon = Icons.insert_drive_file;
-        bg = Colors.grey.shade600;
+        color = Colors.grey;
     }
-
-    return CircleAvatar(
-      radius: 22,
-      backgroundColor: bg,
-      child: Icon(icon, color: Colors.white, size: 20),
-    );
+    return CircleAvatar(backgroundColor: color, child: Icon(icon, color: Colors.white));
   }
 
   Widget _buildUploadCard(
@@ -354,183 +269,68 @@ class _DepartmentFilesScreenState extends State<DepartmentFilesScreen> {
       UploadedFileProvider uploadedFileProvider,
       ) {
     return Card(
-      elevation: 6,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      color: Colors.white,
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // Title
-            Row(
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  padding: const EdgeInsets.all(8),
-                  child: const Icon(Icons.upload_file, color: Colors.blue, size: 28),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    "Upload Excel for $deptName",
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-                  ),
-                ),
-                // month label
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    DateFormat('MMMM yyyy').format(now),
-                    style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ],
-            ),
+            Row(children: [
+              const Icon(Icons.upload_file, color: Colors.blue),
+              const SizedBox(width: 8),
+              Expanded(
+                  child: Text("Upload Excel for $deptName",
+                      style: const TextStyle(fontWeight: FontWeight.bold))),
+            ]),
             const SizedBox(height: 12),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.cloud_upload),
+              label: const Text("Select & Upload Excel"),
+              onPressed: () async {
+                if (_selectedBdoId == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Please select a BDO first")));
+                  return;
+                }
 
-            // Instructions
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Text(
-                    "Select an .xlsx file to upload. Files will be visible below for preview and approval.",
-                    style: TextStyle(color: Colors.grey.shade700),
-                  ),
-                ),
-              ],
+                final result = await FilePicker.platform.pickFiles(
+                  type: FileType.custom,
+                  allowedExtensions: ['xlsx'],
+                  withData: true,
+                );
+
+                if (result != null && result.files.single.bytes != null) {
+                  final token = authProvider.token;
+                  if (token == null || token.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("You are not logged in")));
+                    return;
+                  }
+
+                  await uploadProvider.uploadFile(
+                    fileBytes: result.files.single.bytes!,
+                    fileName: result.files.single.name,
+                    departmentId: deptId,
+                    bdoId: _selectedBdoId!,
+                    month: now.month,
+                    year: now.year,
+                    token: token,
+                  );
+
+                  if (uploadProvider.uploadResponse != null) {
+                    await _refreshFiles();
+                  }
+                }
+              },
             ),
-            const SizedBox(height: 12),
-
-            // Buttons row
-            Row(
-              children: [
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade700,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 18),
-                  ),
-                  icon: const Icon(Icons.cloud_upload, color: Colors.white),
-                  label: const Text("Select & Upload Excel", style: TextStyle(color: Colors.white)),
-                  onPressed: () async {
-                    final result = await FilePicker.platform.pickFiles(
-                      type: FileType.custom,
-                      allowedExtensions: ['xlsx'],
-                      withData: true,
-                    );
-
-                    if (result != null && result.files.single.bytes != null) {
-                      final token = authProvider.token;
-                      if (token == null || token.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("You are not logged in")),
-                        );
-                        return;
-                      }
-
-                      await uploadProvider.uploadFile(
-                        fileBytes: result.files.single.bytes!,
-                        fileName: result.files.single.name,
-                        departmentId: widget.department.id,
-                        bdoId: 103,
-                        month: now.month,
-                        year: now.year,
-                        token: token,
-                      );
-
-                      if (uploadProvider.uploadResponse != null) {
-                        // refresh the uploaded files list after success
-                        await uploadedFileProvider.fetchUploadedFiles(
-                          departmentId:widget.department.id,
-                          bdoId: 103,
-                          month: now.month,
-                          year: now.year,
-                          uploadedByUserId: 15,
-                          token: token,
-                        );
-                      }
-                    }
-                  },
-                ),
-
-                const SizedBox(width: 12),
-
-                // optional clear / sample file button
-                OutlinedButton.icon(
-                  icon: const Icon(Icons.info_outline),
-                  label: const Text("Sample"),
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (_) => AlertDialog(
-                        title: const Text("Sample Excel Format"),
-                        content: const Text("Place here a brief description of the required column structure."),
-                        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text("Close"))],
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-
-            // Upload feedback area
-            const SizedBox(height: 12),
             if (uploadProvider.isLoading)
-              const LinearProgressIndicator(),
-
-            if (uploadProvider.uploadResponse != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: Row(
-                  children: [
-                    const Icon(Icons.check_circle, color: Colors.green),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text("Uploaded: ${uploadProvider.uploadResponse!.originalFileName}",
-                          style: const TextStyle(color: Colors.green)),
-                    )
-                  ],
-                ),
-              ),
-
-            if (uploadProvider.errorMessage != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: Row(
-                  children: [
-                    const Icon(Icons.error, color: Colors.red),
-                    const SizedBox(width: 8),
-                    Expanded(child: Text("Error: ${uploadProvider.errorMessage}", style: const TextStyle(color: Colors.red))),
-                  ],
-                ),
+              const Padding(
+                padding: EdgeInsets.only(top: 8.0),
+                child: LinearProgressIndicator(),
               ),
           ],
         ),
       ),
     );
-  }
-
-  Future<bool> _confirmDialog(BuildContext context, String title, String content) async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text(title),
-        content: Text(content),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('No')),
-          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Yes')),
-        ],
-      ),
-    );
-
-    return result ?? false;
   }
 }
